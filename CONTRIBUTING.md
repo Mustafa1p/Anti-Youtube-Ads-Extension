@@ -23,7 +23,7 @@ There are no runtime npm dependencies. Prettier is a pinned development dependen
 - **Theme:** edit `style.css` and `backgroundRandomizer.js`. Original SVG backgrounds and the audio icon can be regenerated with `npm run assets:generate`.
 - **Development diagnostics:** `scripts/diagnostic.js` is a manual console helper, excluded from the runtime ZIP. It is not a supported video-download feature.
 
-Paths above are inside `extension/` unless prefixed otherwise. See [the architecture and source map](README.md#how-the-browser-extension-works) and [webOS research](docs/webos-research.md).
+Paths above are inside `extension/` unless prefixed otherwise. See [the architecture and source map](README.md#how-the-browser-extension-works) and [browser implementation notes](docs/architecture.md).
 
 ## Validate behavior
 
@@ -45,6 +45,6 @@ Use a separate browser profile for extension development. Load a packaged copy w
 
 Describe the concrete problem, the resulting behavior, and how you checked it. Include screenshots for visible changes and identify browser/version for playback issues. Add regression tests when behavior changes; documentation-only changes generally do not need new tests. Keep unrelated cleanup separate when possible.
 
-Follow the existing format and run `npm run check` before requesting review. Include lockfile changes when changing development dependencies. New images must have a recorded source and redistribution terms in [the asset inventory](docs/assets.md); prefer original SVG/code assets. Do not copy GPL-licensed upstream code into this MIT project without addressing licensing first.
+Follow the existing format and run `npm run check` before requesting review. Include lockfile changes when changing development dependencies. New images must have a recorded source and redistribution terms in [the asset inventory](docs/assets.md); prefer original SVG/code assets. Respect third-party licenses and retain required copyright and attribution notices when adding code or assets.
 
 Be respectful, explain disagreements with evidence, and avoid posting private account data. Maintainers review contributions before merging. For release steps, see [releasing](docs/releasing.md).

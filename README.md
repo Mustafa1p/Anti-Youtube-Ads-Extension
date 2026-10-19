@@ -112,13 +112,11 @@ flowchart LR
 
 YouTube changes frequently. Ad blocking, internal player methods, thumbnail availability, and community segment coverage are best effort. This extension does not guarantee uninterrupted playback or bypass account, region, age, or subscription requirements.
 
-## What came from the webOS research
+## Educational purpose
 
-The [webosbrew/youtube-webos](https://github.com/webosbrew/youtube-webos) project inspired the browser feature selection. Its TV launch path, response hooks, player manager, settings, SponsorBlock, quality, thumbnail, and clock modules were reviewed at commit [`f1b3b72`](https://github.com/webosbrew/youtube-webos/tree/f1b3b72926bb0cc312b5ceddc6a5b8c8ca081914).
+This project is provided for educational study of browser extensions, media controls, and page customization. Use it responsibly and respect applicable platform terms and third-party rights. Educational use does not guarantee compatibility, platform approval, or continued hosting.
 
-The portable feature ideas have separate browser implementations here. The TV launcher, remote-button mappings, account selector, Luna services, casting integration, and screensaver fixes remain specific to webOS. Existing desktop ad cleanup, Shorts filtering, and end-screen removal are retained.
-
-See **[the implementation notes](docs/webos-research.md)** for the source map, design decisions, and compatibility boundaries. Upstream is GPL-3.0-only; no upstream source files are bundled in this MIT project. Credit remains with its contributors and the SponsorBlock community.
+See the [browser implementation notes](docs/architecture.md) for the design and compatibility boundaries.
 
 ## Privacy and permissions
 
@@ -170,6 +168,6 @@ Automated checks cover syntax, manifest assets, script loading, settings validat
 
 ## Credits and license
 
-Created by IP. Bundled backgrounds and the spatial-audio icon are original procedural SVGs; see the [asset inventory](docs/assets.md). Thanks to [webosbrew/youtube-webos](https://github.com/webosbrew/youtube-webos) for the feature inspiration and [SponsorBlock](https://sponsor.ajay.app/) for community segment data. This is an independent project and is not affiliated with YouTube, Google, Netflix, LG, or Dolby. The demo video and third-party imagery visible in browser screenshots belong to their respective owners.
+Created by IP. Bundled backgrounds and the spatial-audio icon are original procedural SVGs; see the [asset inventory](docs/assets.md). Community segment data is provided by [SponsorBlock](https://sponsor.ajay.app/). This is an independent project and is not affiliated with YouTube, Google, Netflix, LG, or Dolby. The demo video and third-party imagery visible in browser screenshots belong to their respective owners.
 
 Project code is licensed under [MIT](LICENSE). Third-party artwork and trademarks are not relicensed by that code license.
