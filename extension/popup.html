@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>IPTUBE · Stranger Things Edition</title>
+    <link rel="stylesheet" href="popup.css" />
+  </head>
+  <body>
+    <main class="container">
+      <header class="hero">
+        <div class="eyebrow">
+          <span class="live-dot"></span> IPTUBE / BROWSER EDITION
+          <span class="version">V2.3</span>
+        </div>
+        <h1>STRANGER<br /><span>THINGS</span></h1>
+        <p>Your screen. A different dimension.</p>
+        <a
+          class="demo-link"
+          href="https://www.youtube.com/watch?v=SkcO47UDzzY&amp;list=RDSkcO47UDzzY&amp;start_radio=1"
+          target="_blank"
+          rel="noopener noreferrer"
+          >▶ Enter the Upside Down <span>DEMO</span></a
+        >
+      </header>
+      <section aria-labelledby="featuresTitle">
+        <div class="section-heading">
+          <h2 id="featuresTitle">PLAYBACK &amp; ATMOSPHERE</h2>
+          <span>LIVE SETTINGS</span>
+        </div>
+        <div id="featureList" class="feature-list"></div>
+        <details class="sponsor-details">
+          <summary>SponsorBlock categories &amp; privacy</summary>
+          <p>
+            Optional community segment skipping. When enabled, a four-character
+            SHA-256 prefix of the current video ID is sent to
+            sponsorblock.inf.re. Your IP address is visible to that service. No
+            account or cookies are sent.
+          </p>
+          <div id="sponsorCategories" class="category-list"></div>
+          <a
+            href="https://sponsor.ajay.app/privacy/"
+            target="_blank"
+            rel="noopener noreferrer"
+            >SponsorBlock privacy policy ↗</a
+          >
+        </details>
+      </section>
+      <section aria-labelledby="ambilightTitle" class="ambilight-section">
+        <div class="section-heading">
+          <h2 id="ambilightTitle">FEELING WITH IP MODE</h2>
+          <span>AMBILIGHT</span>
+        </div>
+        <p class="section-description">
+          Add a video. Let its colors take over the room.
+        </p>
+        <div class="input-group">
+          <input
+            type="text"
+            id="videoInput"
+            aria-label="YouTube video link or ID"
+            placeholder="Paste a YouTube link or video ID"
+          />
+          <button id="addBtn" type="button">ADD +</button>
+        </div>
+        <ul
+          id="videoList"
+          class="video-list"
+          aria-label="Ambilight videos"
+        ></ul>
+      </section>
+      <div class="status-msg" id="statusMsg" role="status"></div>
+      <footer>
+        <span>CREATED BY IP</span><span>DESKTOP YOUTUBE · MV3</span>
+      </footer>
+    </main>
+    <script src="featureSettings.js"></script>
+    <script src="videoSettings.js"></script>
+    <script src="popup.js"></script>
+  </body>
+</html>

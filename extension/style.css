@@ -1,0 +1,673 @@
+/* STRANGER THINGS: THE UPSIDE DOWN EDITION */
+
+/* GLOBAL VARIABLES */
+:root {
+  --st-red: #e71d36;
+  --st-dark-red: #8a0a14;
+  --st-black: #050505;
+  --st-glow: 0 0 10px rgba(231, 29, 54, 0.7);
+  --stranger-font: "ITC Benguiat", Georgia, serif;
+
+  /* YOUTUBE OVERRIDES */
+  --yt-spec-base-background: var(--st-black) !important;
+  --yt-spec-raised-background: #0a0a0a !important;
+  --yt-spec-menu-background: #0f0000 !important;
+  --yt-spec-text-primary: #ffffff !important;
+  --yt-spec-text-secondary: #ffcccc !important;
+  --yt-spec-static-brand-red: var(--st-red) !important;
+  --yt-spec-brand-icon-active: var(--st-red) !important;
+  --yt-spec-icon-active-other: var(--st-red) !important;
+  --yt-spec-icon-inactive: #661111 !important;
+  --ytd-searchbox-background: #000000 !important;
+  --ytd-searchbox-text-color: #ffffff !important;
+}
+
+/* --- ATMOSPHERE & BACKGROUND --- */
+
+/* Main Background */
+body {
+  background-color: #000 !important;
+  overflow-x: hidden;
+}
+
+body::before {
+  content: "";
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  /* Background Image from Extension */
+  background-image: var(--st-bg-image, none);
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  /* Make it visible but dark enough for text */
+  opacity: 0.35;
+  z-index: -1;
+  filter: contrast(1.4) brightness(0.6) hue-rotate(-10deg);
+  pointer-events: none;
+  will-change: opacity;
+  animation: breathing-bg 10s infinite alternate;
+}
+
+@keyframes breathing-bg {
+  0% {
+    opacity: 0.35;
+  }
+
+  100% {
+    opacity: 0.45;
+  }
+}
+
+/* CRT Scanlines / Vignette Overlay */
+body::after {
+  content: " ";
+  display: block;
+  position: fixed;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  right: 0;
+  background:
+    linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%),
+    linear-gradient(
+      90deg,
+      rgba(255, 0, 0, 0.06),
+      rgba(0, 255, 0, 0.02),
+      rgba(0, 0, 255, 0.06)
+    ),
+    radial-gradient(circle, transparent 50%, #000000 100%);
+  z-index: -1;
+  /* BEHIND content, ON TOP of background */
+  background-size:
+    100% 3px,
+    3px 100%,
+    100% 100%;
+  pointer-events: none;
+  mix-blend-mode: overlay;
+}
+
+/* --- STRUCTURAL TRANSPARENCY --- */
+
+ytd-app,
+#content,
+#page-manager,
+ytd-browse,
+ytd-watch-flexy {
+  background: transparent !important;
+}
+
+/* --- HEADER / MASTHEAD --- */
+
+#masthead-container {
+  background: rgba(5, 0, 0, 0.95) !important;
+  box-shadow: 0 5px 20px rgba(0, 0, 0, 0.8);
+  /* Remove old simple border */
+  border-bottom: none !important;
+  overflow: visible !important;
+  /* Allow lights to hang */
+  z-index: 2020 !important;
+  /* Ensure it's on top */
+}
+
+/* STRANGER THINGS NEON DIVIDER */
+#masthead-container::after {
+  content: "";
+  /* No alphabet text */
+  display: block;
+  position: absolute;
+  /* Revert to absolute to stick to header bottom */
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 1px;
+  transform: scaleY(0.2);
+  /* Ultra ultra thin */
+  opacity: 0.6;
+
+  /* Movie Palette Gradient: Red (#ff1515) and Blue (#3a5fe5) */
+  background: linear-gradient(
+    90deg,
+    rgba(255, 21, 21, 0.8) 0%,
+    rgba(58, 95, 229, 0.8) 50%,
+    rgba(255, 21, 21, 0.8) 100%
+  );
+
+  /* Nano Neon Glow Effect */
+  box-shadow:
+    0 0 2px rgba(255, 21, 21, 0.5),
+    0 0 4px rgba(58, 95, 229, 0.5);
+
+  z-index: 2021;
+  pointer-events: none;
+
+  /* Pulse Animation */
+  animation: neon-pulse 3s infinite alternate;
+}
+
+@keyframes neon-pulse {
+  0% {
+    opacity: 0.8;
+    filter: brightness(1);
+  }
+
+  100% {
+    opacity: 1;
+    filter: brightness(1.5);
+  }
+}
+
+@keyframes christmas-lights {
+  0% {
+    filter: drop-shadow(0 -5px 2px rgba(255, 255, 255, 0.2)) brightness(0.8);
+  }
+
+  100% {
+    filter: drop-shadow(0 -5px 8px rgba(255, 255, 255, 0.8)) brightness(1.2);
+  }
+}
+
+/* Search Bar */
+ytd-searchbox-form {
+  border: 1px solid var(--st-dark-red) !important;
+  border-radius: 4px !important;
+  box-shadow: inset 0 0 10px rgba(255, 0, 0, 0.2);
+}
+
+#container.ytd-searchbox {
+  background: black !important;
+}
+
+input#search {
+  font-family: var(--stranger-font) !important;
+  color: var(--st-red) !important;
+  text-shadow: 0 0 2px var(--st-red);
+}
+
+/* LOGO SWAP: Hide standard logo, show Stranger Things text */
+ytd-topbar-logo-renderer #logo,
+ytd-topbar-logo-renderer #country-code {
+  display: none !important;
+}
+
+/* Custom Logo Container Injected via JS */
+#st-custom-logo {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: flex-start;
+  margin-left: 10px;
+  line-height: 1;
+}
+
+.st-logo-title {
+  font-family: var(--stranger-font), serif;
+  font-weight: 800;
+  font-size: 22px;
+  color: transparent;
+  -webkit-text-stroke: 1.5px var(--st-red);
+  text-shadow:
+    0 0 8px rgba(255, 0, 0, 0.8),
+    0 0 15px rgba(255, 0, 0, 0.5);
+  letter-spacing: -1px;
+  animation: text-flicker 4s infinite alternate;
+  cursor: pointer;
+}
+
+.st-logo-subtitle {
+  font-family: "Roboto", sans-serif;
+  font-size: 10px;
+  color: #aaa;
+  text-decoration: none;
+  margin-top: 4px;
+  letter-spacing: 1px;
+  transition: color 0.2s ease;
+  text-transform: uppercase;
+}
+
+.st-logo-subtitle:hover {
+  color: var(--st-red);
+  text-shadow: 0 0 5px var(--st-red);
+}
+
+@keyframes text-flicker {
+  0%,
+  19%,
+  21%,
+  23%,
+  25%,
+  54%,
+  56%,
+  100% {
+    text-shadow:
+      0 0 8px rgba(255, 0, 0, 0.8),
+      0 0 15px rgba(255, 0, 0, 0.5);
+    opacity: 1;
+  }
+
+  20%,
+  24%,
+  55% {
+    text-shadow: none;
+    opacity: 0.5;
+  }
+}
+
+/* --- CONTENT & CARDS --- */
+
+/* Sidebar */
+#guide-content {
+  background: rgba(0, 0, 0, 0.95) !important;
+  border-right: 1px solid #2a0000;
+}
+
+/* Video Thumbnails & Cards */
+ytd-rich-item-renderer,
+ytd-compact-video-renderer {
+  background-color: rgba(10, 0, 0, 0.6);
+  padding: 8px;
+  border-radius: 8px;
+  transition: all 0.2s ease-out;
+}
+
+ytd-rich-item-renderer:hover,
+ytd-compact-video-renderer:hover {
+  background-color: rgba(30, 0, 0, 0.8);
+  transform: scale(1.02);
+  box-shadow: 0 0 20px rgba(231, 29, 54, 0.3);
+  z-index: 10;
+  border: 1px solid var(--st-dark-red);
+}
+
+/* Thumbnails */
+ytd-thumbnail {
+  border: 1px solid #200;
+  border-radius: 6px;
+}
+
+ytd-thumbnail:hover {
+  border-color: var(--st-red);
+}
+
+/* Text Colors */
+#video-title {
+  color: #ffffff !important;
+  /* Clear white text for titles */
+  text-shadow: 0 1px 3px black;
+  font-weight: 600;
+}
+
+.ytd-channel-name a {
+  color: #ffaaaa !important;
+  /* Light red for channels */
+}
+
+#metadata-line {
+  color: #bbbbbb !important;
+}
+
+/* Chips / Categories */
+yt-chip-cloud-chip-renderer {
+  background: #110000 !important;
+  border: 1px solid #330000 !important;
+  color: #fff !important;
+}
+
+yt-chip-cloud-chip-renderer[selected] {
+  background: var(--st-red) !important;
+  color: black !important;
+  font-weight: bold;
+  box-shadow: 0 0 10px var(--st-red);
+}
+
+/* --- ICONS & UI ELEMENTS --- */
+
+/* CLEAN PLAYER: Exempt the video player from the TV/Scanline overlay */
+#movie_player,
+.html5-video-player,
+.video-stream,
+ytd-player {
+  z-index: 2205 !important;
+  /* Above the body::after overlay (2200) */
+  position: relative !important;
+  background-color: #000 !important;
+  /* Ensure opaque background */
+  box-shadow: 0 0 30px rgba(0, 0, 0, 0.8);
+  /* Nice separation shadow */
+}
+
+/* Ensure full screen player is also above the effect */
+.html5-video-player.ytp-fullscreen {
+  z-index: 3000 !important;
+}
+
+/* AMBILIGHT "WOW" EFFECTS */
+
+/* 1. Dynamic Sidebar Cards */
+/* When Ambilight is active, sidebar cards take on the video's color (dimmed) */
+body.st-ambilight-active ytd-compact-video-renderer,
+body.st-ambilight-active ytd-rich-item-renderer {
+  /* Use a mix of black and the dynamic color */
+  background-color: color-mix(in srgb, var(--st-red), black 85%) !important;
+  border: 1px solid color-mix(in srgb, var(--st-red), transparent 70%) !important;
+  box-shadow: 0 0 15px color-mix(in srgb, var(--st-red), transparent 90%);
+  transition:
+    background-color 0.2s,
+    border-color 0.2s,
+    box-shadow 0.2s;
+}
+
+body.st-ambilight-active ytd-compact-video-renderer:hover,
+body.st-ambilight-active ytd-rich-item-renderer:hover {
+  background-color: color-mix(in srgb, var(--st-red), black 60%) !important;
+  box-shadow: 0 0 30px color-mix(in srgb, var(--st-red), transparent 70%);
+  transform: scale(1.02);
+  z-index: 100;
+}
+
+/* 2. The "Found In Player" Glow */
+/* A massive, soft backlight behind the player itself */
+body.st-ambilight-active #movie_player {
+  box-shadow: 0 0 150px var(--st-glow) !important;
+  transition: box-shadow 0.1s linear;
+}
+
+body.st-ambilight-active #movie_player::after {
+  content: "";
+  position: absolute;
+  top: -10%;
+  left: -10%;
+  width: 120%;
+  height: 120%;
+  background: radial-gradient(circle, var(--st-red) 0%, transparent 70%);
+  opacity: 0.15;
+  z-index: -1;
+  pointer-events: none;
+  mix-blend-mode: screen;
+}
+
+yt-icon {
+  fill: var(--st-red) !important;
+  filter: drop-shadow(0 0 3px rgba(255, 0, 0, 0.5));
+}
+
+/* Buttons */
+.yt-spec-button-shape-next--filled {
+  background: var(--st-red) !important;
+  color: #000 !important;
+  box-shadow: 0 0 10px var(--st-red);
+}
+
+/* Progress Bar (Video Player) */
+.ytp-play-progress {
+  background: var(--st-red) !important;
+  background: linear-gradient(to right, #800, #f00) !important;
+  box-shadow: 0 0 15px var(--st-red);
+}
+
+.ytp-swatch-background-color {
+  background-color: var(--st-red) !important;
+}
+
+.ytp-scrubber-button {
+  background: var(--st-red) !important;
+  box-shadow: 0 0 10px #fff;
+}
+
+/* Floating "Particles" - REMOVED for performance (created 50+ extra compositing layers) */
+
+/* --- REMOVED ELEMENTS --- */
+/* Hide "Playables", "Shorts", and other interruption shelves */
+/* --- SPECIAL EVENTS / EASTER EGGS --- */
+
+/* Complete Blackout */
+.st-special-blackout {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: #000 !important;
+  z-index: 22000 !important;
+  /* Above EVERYTHING */
+  pointer-events: none;
+  opacity: 1;
+  transition: opacity 0.5s;
+}
+
+/* Burning World Mode */
+body.st-burning-mode {
+  filter: contrast(130%) sepia(50%) saturate(300%) hue-rotate(-15deg) !important;
+  overflow: hidden;
+}
+
+body.st-burning-mode::before {
+  /* Change background to fierce red/fire during burning mode */
+  filter: contrast(2) brightness(0.5) sepia(1) hue-rotate(-50deg) !important;
+  animation: none !important;
+  /* Stop breathing, start burning */
+}
+
+/* Fire Overlay */
+.st-burning-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  z-index: 21000;
+  background: radial-gradient(
+    circle,
+    transparent 20%,
+    rgba(255, 0, 0, 0.4) 60%,
+    rgba(50, 0, 0, 0.95) 100%
+  );
+  mix-blend-mode: hard-light;
+  pointer-events: none;
+  animation: burn-flicker 0.3s infinite alternate;
+}
+
+/* Ash Particles */
+.st-ash-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-image: url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyMDAiIGhlaWdodD0iMjAwIj48cmVjdCB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgZmlsbD0idHJhbnNwYXJlbnQiLz48Y2lyY2xlIGN4PSIyMCIgY3k9IjMwIiByPSIxIiBmaWxsPSIjZmZmIiBvcGFjaXR5PSIwLjUiLz48Y2lyY2xlIGN4PSI4MCIgY3k9IjE1MCIgcj0iMiIgZmlsbD0iI2ZmZiIgb3BhY2l0eT0iMC4zIi8+PC9zdmc+");
+  z-index: 21001;
+  pointer-events: none;
+  animation: ash-fall 3s linear infinite;
+  mix-blend-mode: screen;
+  opacity: 0.5;
+}
+
+@keyframes burn-flicker {
+  0% {
+    opacity: 0.8;
+    transform: scale(1);
+    background-color: rgba(255, 0, 0, 0.1);
+  }
+
+  100% {
+    opacity: 1;
+    transform: scale(1.02);
+    background-color: rgba(255, 50, 0, 0.2);
+  }
+}
+
+@keyframes ash-fall {
+  0% {
+    transform: translateY(0) rotate(0deg);
+  }
+
+  100% {
+    transform: translateY(100vh) rotate(180deg);
+  }
+}
+
+/* FREEZING / UPSIDE DOWN COLD MODE (1:07 & End) */
+body.st-freezing-mode {
+  filter: brightness(0.8) contrast(1.4) hue-rotate(180deg) saturate(0.8) !important;
+  overflow: hidden;
+}
+
+/* Cold Overlay */
+.st-freezing-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  z-index: 21000;
+  background: radial-gradient(
+    circle,
+    transparent 20%,
+    rgba(0, 50, 255, 0.2) 60%,
+    rgba(0, 10, 50, 0.8) 100%
+  );
+  mix-blend-mode: hard-light;
+  pointer-events: none;
+  animation: cold-pulse 4s infinite alternate;
+}
+
+/* Snow/Spores Overlay */
+.st-snow-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  /* Reusing ash texture but will look distinct due to filters */
+  background-image: url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyMDAiIGhlaWdodD0iMjAwIj48cmVjdCB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgZmlsbD0idHJhbnNwYXJlbnQiLz48Y2lyY2xlIGN4PSIyMCIgY3k9IjMwIiByPSIxIiBmaWxsPSIjZmZmIiBvcGFjaXR5PSIwLjUiLz48Y2lyY2xlIGN4PSI4MCIgY3k9IjE1MCIgcj0iMiIgZmlsbD0iI2ZmZiIgb3BhY2l0eT0iMC4zIi8+PC9zdmc+");
+  z-index: 21001;
+  pointer-events: none;
+  animation: snow-float 8s linear infinite;
+  mix-blend-mode: screen;
+  opacity: 0.8;
+}
+
+@keyframes cold-pulse {
+  0% {
+    opacity: 0.6;
+  }
+
+  100% {
+    opacity: 0.9;
+  }
+}
+
+@keyframes snow-float {
+  0% {
+    transform: translateY(0) translateX(0);
+  }
+
+  50% {
+    transform: translateY(50vh) translateX(20px);
+  }
+
+  100% {
+    transform: translateY(100vh) translateX(-20px);
+  }
+}
+
+/* INTENSIFIED BURNING (2:18 - 2:29) */
+body.st-burning-mode.st-intense {
+  filter: contrast(150%) sepia(80%) saturate(500%) hue-rotate(-25deg) !important;
+}
+
+body.st-burning-mode.st-intense .st-burning-overlay {
+  background: radial-gradient(
+    circle,
+    transparent 10%,
+    rgba(255, 50, 0, 0.6) 50%,
+    rgba(80, 0, 0, 1) 100%
+  );
+  animation:
+    burn-flicker 0.15s infinite alternate,
+    shake-screen 0.3s infinite;
+}
+
+@keyframes shake-screen {
+  0% {
+    transform: translate(1px, 1px) rotate(0deg);
+  }
+
+  10% {
+    transform: translate(-1px, -2px) rotate(-1deg);
+  }
+
+  20% {
+    transform: translate(-3px, 0px) rotate(1deg);
+  }
+
+  30% {
+    transform: translate(3px, 2px) rotate(0deg);
+  }
+
+  40% {
+    transform: translate(1px, -1px) rotate(1deg);
+  }
+
+  50% {
+    transform: translate(-1px, 2px) rotate(-1deg);
+  }
+
+  60% {
+    transform: translate(-3px, 1px) rotate(0deg);
+  }
+
+  70% {
+    transform: translate(3px, 1px) rotate(-1deg);
+  }
+
+  80% {
+    transform: translate(-1px, -1px) rotate(1deg);
+  }
+
+  90% {
+    transform: translate(1px, 2px) rotate(0deg);
+  }
+
+  100% {
+    transform: translate(1px, -2px) rotate(-1deg);
+  }
+}
+
+/* --- REMOVED ELEMENTS & CLEANUP --- */
+
+/* HIDE SHORTS (User Request) */
+ytd-rich-section-renderer,
+/* Home page shelves (Shorts, Playables) */
+ytd-reel-shelf-renderer,
+/* Specific Shorts shelf */
+ytm-shorts-lockup-view-model-v2,
+/* Specific Shorts Container */
+ytm-shorts-lockup-view-model,
+ytd-shorts-lockup-view-model,
+[title="Shorts"],
+[aria-label="Shorts"],
+a[href^="/shorts/"] {
+  display: none !important;
+}
+
+/* AMBILIGHT FULLSCREEN OVERLAY */
+.st-ambilight-screen {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  pointer-events: none;
+  z-index: 0;
+  /* Just above background (-1) but below UI */
+  mix-blend-mode: screen;
+  /* Adds light to the dark theme */
+  opacity: 0.6;
+  will-change: background-color;
+  transition: background-color 0.3s linear;
+  box-shadow: inset 0 0 200px rgba(0, 0, 0, 0.8);
+  /* Vignette to keep edges darker */
+}

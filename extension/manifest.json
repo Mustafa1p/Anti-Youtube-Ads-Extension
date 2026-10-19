@@ -1,20 +1,19 @@
 {
   "manifest_version": 3,
-  "name": "IPTUBE X",
-  "description": "Blocks YouTube ad networks and removes residual ad UI so the challenge flag can be revealed.",
-  "version": "1.6",
+  "name": "STRANGER THINGS EDITION",
+  "description": "YouTube ad cleanup, optional SponsorBlock, playback tools, and Stranger Things effects for desktop browsers.",
+  "version": "2.3.0",
   "permissions": [
     "declarativeNetRequest",
     "declarativeNetRequestFeedback",
-    "scripting",
-    "activeTab",
     "storage",
     "browsingData"
   ],
   "host_permissions": [
     "https://www.youtube.com/*",
     "https://*.youtube.com/*",
-    "https://*.googlevideo.com/*"
+    "https://*.googlevideo.com/*",
+    "https://sponsorblock.inf.re/*"
   ],
   "background": {
     "service_worker": "background.js"
@@ -22,15 +21,14 @@
   "content_scripts": [
     {
       "matches": ["https://www.youtube.com/*"],
-      "js": ["antiBot.js"],
-      "run_at": "document_start",
-      "world": "MAIN"
+      "js": ["storageSanitizer.js"],
+      "run_at": "document_start"
     },
     {
       "matches": ["https://www.youtube.com/*"],
-      "js": ["storageSanitizer.js"],
+      "js": ["antiBot.js"],
       "run_at": "document_start",
-      "world": "ISOLATED"
+      "world": "MAIN"
     },
     {
       "matches": ["https://www.youtube.com/*"],
@@ -40,7 +38,24 @@
     },
     {
       "matches": ["https://www.youtube.com/*"],
-      "js": ["contentScript.js"],
+      "js": ["playerQuality.js"],
+      "run_at": "document_start",
+      "world": "MAIN"
+    },
+    {
+      "matches": ["https://www.youtube.com/*"],
+      "js": [
+        "featureSettings.js",
+        "contentConfig.js",
+        "sidebar.js",
+        "mediaControls.js",
+        "branding.js",
+        "videoSettings.js",
+        "browserFeatures.js",
+        "contentScript.js",
+        "backgroundRandomizer.js"
+      ],
+      "css": ["style.css", "browserFeatures.css"],
       "run_at": "document_idle"
     }
   ],
@@ -53,7 +68,23 @@
       }
     ]
   },
+  "web_accessible_resources": [
+    {
+      "resources": [
+        "spatial-audio.svg",
+        "background/1.svg",
+        "background/2.svg",
+        "background/3.svg",
+        "background/4.svg",
+        "background/5.svg",
+        "background/6.svg",
+        "background/7.svg"
+      ],
+      "matches": ["https://www.youtube.com/*"]
+    }
+  ],
   "action": {
-    "default_title": "CTF YouTube Ad Blocker"
+    "default_title": "STRANGER THINGS EDITION",
+    "default_popup": "popup.html"
   }
 }

@@ -1,7 +1,7 @@
 /**
  * Storage sanitizer - clears YouTube's persistent ad-block detection markers
  * from localStorage, sessionStorage, and IndexedDB on every page load.
- * 
+ *
  * Runs at document_start in ISOLATED world so it can access storage APIs
  * before YouTube's scripts check for violations.
  */
@@ -20,21 +20,13 @@
     /player.*ad.*count/i,
     /ad.*blocker.*shown/i,
     /monetization.*check/i,
-    // Bot detection patterns
+    // Bot detection patterns — kept specific to avoid clearing legitimate storage
     /bot.*detect/i,
     /captcha/i,
-    /challenge/i,
-    /verify.*human/i,
-    /automation/i,
-    /headless/i,
-    /fingerprint/i,
-    /device.*id/i,
-    /client.*id/i,
     /session.*challenge/i,
-    /abuse/i,
-    /rate.*limit/i,
-    /suspicious/i,
-    /strike/i
+    /verify.*human/i,
+    /headless/i,
+    /ad.*strike|strike.*ad|enforce.*strike/i
   ];
 
   const DETECTION_COOKIE_PATTERNS = [
@@ -46,24 +38,24 @@
 
   // Preserve authentication cookies - NEVER delete these
   const AUTH_COOKIE_WHITELIST = new Set([
-    'SID',
-    'HSID',
-    'SSID',
-    'APISID',
-    'SAPISID',
-    '__Secure-1PSID',
-    '__Secure-3PSID',
-    '__Secure-1PAPISID',
-    '__Secure-3PAPISID',
-    'LOGIN_INFO',
-    'SIDCC',
-    '__Secure-1PSIDCC',
-    '__Secure-3PSIDCC'
+    "SID",
+    "HSID",
+    "SSID",
+    "APISID",
+    "SAPISID",
+    "__Secure-1PSID",
+    "__Secure-3PSID",
+    "__Secure-1PAPISID",
+    "__Secure-3PAPISID",
+    "LOGIN_INFO",
+    "SIDCC",
+    "__Secure-1PSIDCC",
+    "__Secure-3PSIDCC"
   ]);
 
   function matchesPattern(key, patterns) {
     if (!key) return false;
-    return patterns.some(regex => regex.test(key));
+    return patterns.some((regex) => regex.test(key));
   }
 
   function sanitizeStorage(storage, label) {
@@ -80,13 +72,15 @@
         }
       }
 
-      keysToRemove.forEach(key => {
+      keysToRemove.forEach((key) => {
         storage.removeItem(key);
         removed++;
       });
 
       if (removed > 0) {
-        console.debug(`[CTF-Storage] Removed ${removed} detection keys from ${label}`);
+        console.debug(
+          `[CTF-Storage] Removed ${removed} detection keys from ${label}`
+        );
       }
     } catch (error) {
       console.debug(`[CTF-Storage] Failed to sanitize ${label}:`, error);
@@ -99,11 +93,11 @@
     if (!document.cookie) return 0;
 
     let removed = 0;
-    const cookies = document.cookie.split(';');
+    const cookies = document.cookie.split(";");
 
     // Only clear detection-related cookies, preserve auth cookies
-    cookies.forEach(cookie => {
-      const [fullKey] = cookie.split('=');
+    cookies.forEach((cookie) => {
+      const [fullKey] = cookie.split("=");
       const key = fullKey?.trim();
 
       if (!key) return;
@@ -117,17 +111,17 @@
       if (matchesPattern(key, DETECTION_COOKIE_PATTERNS)) {
         try {
           const domains = [
-            '',
+            "",
             window.location.hostname,
             `.${window.location.hostname}`,
-            '.youtube.com',
-            '.google.com'
+            ".youtube.com",
+            ".google.com"
           ];
 
-          const paths = ['/', '/watch', '/feed'];
+          const paths = ["/", "/watch", "/feed"];
 
-          domains.forEach(domain => {
-            paths.forEach(path => {
+          domains.forEach((domain) => {
+            paths.forEach((path) => {
               document.cookie = `${key}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=${path}; domain=${domain}`;
               document.cookie = `${key}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=${path}; domain=${domain}; secure`;
             });
@@ -141,7 +135,9 @@
     });
 
     if (removed > 0) {
-      console.debug(`[CTF-Storage] Removed ${removed} detection cookies (auth preserved)`);
+      console.debug(
+        `[CTF-Storage] Removed ${removed} detection cookies (auth preserved)`
+      );
     }
 
     return removed;
@@ -151,17 +147,17 @@
     if (!window.indexedDB) return;
 
     try {
-      // Clear all known YouTube IndexedDB stores
+      // Only clear databases that store detection/remote state.
+      // DO NOT delete yt-player or yt-player-local-media — those store
+      // player preferences, quality settings, and session config.
       const dbNames = [
-        'yt-player-local-media',
-        'yt-player-bandaid-host',
-        'yt-player',
-        'yt-remote',
-        'YtIdbMeta1#',
-        'YtIdbMeta2#'
+        "yt-player-bandaid-host",
+        "yt-remote",
+        "YtIdbMeta1#",
+        "YtIdbMeta2#"
       ];
 
-      dbNames.forEach(dbName => {
+      dbNames.forEach((dbName) => {
         try {
           const request = indexedDB.deleteDatabase(dbName);
           request.onsuccess = () => {
@@ -172,27 +168,33 @@
         }
       });
     } catch (error) {
-      console.debug('[CTF-Storage] Failed to sanitize IndexedDB:', error);
+      console.debug("[CTF-Storage] Failed to sanitize IndexedDB:", error);
     }
   }
 
   function clearServiceWorkers() {
     if (!navigator.serviceWorker) return;
 
-    navigator.serviceWorker.getRegistrations().then(registrations => {
-      registrations.forEach(registration => {
-        if (registration.scope.includes('youtube.com')) {
-          registration.unregister().then(() => {
-            console.debug('[CTF-Storage] Unregistered service worker:', registration.scope);
-          });
-        }
-      });
-    }).catch(() => { });
+    navigator.serviceWorker
+      .getRegistrations()
+      .then((registrations) => {
+        registrations.forEach((registration) => {
+          if (registration.scope.includes("youtube.com")) {
+            registration.unregister().then(() => {
+              console.debug(
+                "[CTF-Storage] Unregistered service worker:",
+                registration.scope
+              );
+            });
+          }
+        });
+      })
+      .catch(() => {});
   }
 
   function performSanitization() {
-    const localCount = sanitizeStorage(localStorage, 'localStorage');
-    const sessionCount = sanitizeStorage(sessionStorage, 'sessionStorage');
+    const localCount = sanitizeStorage(localStorage, "localStorage");
+    const sessionCount = sanitizeStorage(sessionStorage, "sessionStorage");
     const cookieCount = sanitizeCookies();
 
     // Only clear IndexedDB/ServiceWorkers if we found detection markers
@@ -203,7 +205,9 @@
 
     const total = localCount + sessionCount + cookieCount;
     if (total > 0) {
-      console.info(`[CTF-Storage] Cleared ${total} detection markers (auth preserved)`);
+      console.info(
+        `[CTF-Storage] Cleared ${total} detection markers (auth preserved)`
+      );
     }
   }
 
@@ -211,10 +215,10 @@
   performSanitization();
 
   // Re-run periodically in case YouTube writes markers dynamically
-  setInterval(performSanitization, 5000);
+  setInterval(performSanitization, 30000);
 
   // Also run on visibility change (when user returns to tab)
-  document.addEventListener('visibilitychange', () => {
+  document.addEventListener("visibilitychange", () => {
     if (!document.hidden) {
       performSanitization();
     }

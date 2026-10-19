@@ -1,0 +1,29 @@
+name: Bug report
+description: Report a reproducible extension problem
+labels: []
+body:
+  - type: textarea
+    id: behavior
+    attributes:
+      label: Expected and actual behavior
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      description: Include a public video URL if relevant. Do not include account details or credentials.
+    validations:
+      required: true
+  - type: input
+    id: environment
+    attributes:
+      label: Browser, operating system, and extension version
+      placeholder: Chrome 140 / Windows 11 / IPTUBE 2.3.0
+    validations:
+      required: true
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Screenshots or relevant console errors
+      description: Remove personal information before sharing.

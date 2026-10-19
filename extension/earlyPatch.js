@@ -1,5 +1,61 @@
+/* eslint-env browser */
+
 (() => {
   "use strict";
+
+  // Patch postMessage to suppress cross-origin errors from YouTube's internal code
+  // (e.g., youtube.com <-> studio.youtube.com communication)
+  const originalPostMessage = window.postMessage.bind(window);
+  window.postMessage = function patchedPostMessage(
+    message,
+    targetOrigin,
+    transfer
+  ) {
+    try {
+      let safeTargetOrigin = targetOrigin;
+
+      // If YouTube code uses a strict origin that doesn't match this window, calling
+      // postMessage will throw. For YouTube↔YouTube communication (e.g. www <-> studio),
+      // downgrade targetOrigin to "*" to preserve behavior without console noise.
+      if (typeof targetOrigin === "string" && targetOrigin !== "*") {
+        const currentOrigin = window.location.origin;
+        const isYouTubeOrigin = (origin) => {
+          try {
+            const hostname = new URL(origin).hostname;
+            return (
+              hostname === "youtube.com" || hostname.endsWith(".youtube.com")
+            );
+          } catch {
+            return false;
+          }
+        };
+
+        if (
+          targetOrigin !== currentOrigin &&
+          isYouTubeOrigin(targetOrigin) &&
+          isYouTubeOrigin(currentOrigin)
+        ) {
+          safeTargetOrigin = "*";
+        }
+      }
+
+      if (arguments.length >= 3) {
+        return originalPostMessage(message, safeTargetOrigin, transfer);
+      }
+      return originalPostMessage(message, safeTargetOrigin);
+    } catch (error) {
+      // Silently suppress postMessage errors (cross-origin issues)
+      if (
+        error?.name === "DataCloneError" ||
+        error?.message?.includes("target origin") ||
+        error?.message?.includes("cross-origin")
+      ) {
+        return;
+      }
+      // Re-throw other errors
+      throw error;
+    }
+  };
 
   const HARD_BLOCK_KEYS = new Set([
     "adPlacements",
@@ -26,23 +82,34 @@
     "promotedProductRenderer",
     "sponsorshipsRenderer",
     "paidContentOverlayRenderer",
-    "campaign"
+    "campaign",
+    // Premium upsell keys — keep only the clearly upsell-specific ones
+    "upsellViewModel",
+    "upsellDialogRenderer",
+    "premiumUpsellRenderer",
+    "premiumUpsellDialogRenderer"
+    // NOTE: dialogViewModel / panelFooterViewModel / buttonViewModel removed —
+    // these are YouTube's generic UI components used for player controls,
+    // quality dialogs, like buttons, etc. Deleting them crashes the player.
   ]);
 
   const KEY_PATTERNS = [
-    /^ad(?!ap|ditional|just|aptive|min)/i,  // "admin" should not be blocked
-    /^promoted(?!Comment|Reply)/i,  // Don't block promotedComment/promotedReply
-    /^sponsor(?!Button|Channel)/i,  // Don't block sponsorButton or sponsorChannel (legit features)
+    /^ad(?!ap|ditional|just|aptive|min)/i, // "admin" should not be blocked
+    /^promoted(?!Comment|Reply)/i, // Don't block promotedComment/promotedReply
+    /^sponsor(?!Button|Channel)/i, // Don't block sponsorButton or sponsorChannel (legit features)
     /paidcontent/i,
     /pagead/i,
-    /companionad/i
+    /companionad/i,
+    /upsell/i, // Block all upsell-related keys
+    /premium.*upsell/i
   ];
 
   const BLOCK_URL_PATTERNS = [
     /youtube\.com\/api\/stats\/watchtime.*(el=adunit|is_ad=1|adformat=)/i,
     /youtube\.com\/api\/stats\/ads/i,
     /youtube\.com\/pagead\//i,
-    /doubleclick\.net\/.*(ad|pagead|gampad)/i
+    /doubleclick\.net\/.*(ad|pagead|gampad)/i,
+    /youtube\.com\/youtubei\/v\d+\/get_panel\?.*panelId.*premium_upsell/i
   ];
 
   const ENFORCEMENT_REASON_PATTERNS = [
@@ -80,7 +147,15 @@
     "restrictedSignInRenderer",
     "verifyRenderer",
     "humanVerificationRenderer",
-    "liveChatActionPanelRenderer"
+    // Premium upsell renderers
+    "upsellViewModel",
+    "upsellDialogRenderer",
+    "premiumUpsellRenderer",
+    "premiumUpsellDialogRenderer"
+    // NOTE: liveChatActionPanelRenderer, panelFooterViewModel, dialogViewModel removed —
+    // liveChatActionPanelRenderer is a legitimate YouTube chat feature;
+    // panelFooterViewModel and dialogViewModel are generic UI components used
+    // by the player for quality settings, share dialogs, etc.
   ]);
 
   const ENFORCEMENT_FLAG_KEYS = [
@@ -137,7 +212,9 @@
     if (window.__ctfSpoofVisitorData) {
       return window.__ctfSpoofVisitorData;
     }
-    const seed = getOriginalYtcfgValue("visitorData") || Math.random().toString(36).slice(2);
+    const seed =
+      getOriginalYtcfgValue("visitorData") ||
+      Math.random().toString(36).slice(2);
     const encoded = btoa(`${SPOOF_VISITOR_PREFIX}_${seed}`).replace(/=+$/, "");
     window.__ctfSpoofVisitorData = encoded.slice(0, 32);
     return window.__ctfSpoofVisitorData;
@@ -165,16 +242,11 @@
     return { ...headersInit };
   }
 
-  function stripAuthHeaders(headers) {
-    const sanitized = { ...headers };
-    const blocked = ["authorization", "x-goog-authuser", "x-youtube-identity-token", "x-goog-visitor-id"];
-    Object.keys(sanitized).forEach((key) => {
-      if (blocked.includes(key.toLowerCase())) {
-        delete sanitized[key];
-      }
-    });
-    sanitized["x-goog-visitor-id"] = getSpoofVisitorData();
-    return sanitized;
+  function ensureVisitorHeader(headers) {
+    const next = { ...headers };
+    // Keep all existing auth/identity headers to avoid breaking player requests.
+    next["x-goog-visitor-id"] = getSpoofVisitorData();
+    return next;
   }
 
   function spoofPlayerRequestBody(body) {
@@ -183,23 +255,29 @@
     }
     try {
       const payload = JSON.parse(body);
-      const context = payload.context = payload.context || {};
-      const client = context.client = context.client || {};
-      client.loggedIn = false;
-      client.visitorData = getSpoofVisitorData();
-      client.accountIndex = 0;
+      const context = (payload.context = payload.context || {});
+      const client = (context.client = context.client || {});
+      // Avoid forcing logged-out state; it can break playback for some accounts/regions.
+      // Only ensure visitorData is stable.
+      client.visitorData = client.visitorData || getSpoofVisitorData();
       client.userInterfaceTheme = client.userInterfaceTheme || "CLASSIC";
       client.mainAppWebInfo = client.mainAppWebInfo || {};
-      client.mainAppWebInfo.graftUrl = client.mainAppWebInfo.graftUrl || `${window.location.pathname}${window.location.search}`;
+      client.mainAppWebInfo.graftUrl =
+        client.mainAppWebInfo.graftUrl ||
+        `${window.location.pathname}${window.location.search}`;
 
-      const request = context.request = context.request || {};
-      request.sessionIndex = null;
+      const request = (context.request = context.request || {});
       request.internalExperimentFlags = request.internalExperimentFlags || [];
 
       payload.playbackContext = payload.playbackContext || {};
-      payload.playbackContext.contentPlaybackContext = payload.playbackContext.contentPlaybackContext || {};
-      if (!payload.playbackContext.contentPlaybackContext.signatureTimestamp && typeof window.ytcfg?.get === "function") {
-        payload.playbackContext.contentPlaybackContext.signatureTimestamp = window.ytcfg.get("STS");
+      payload.playbackContext.contentPlaybackContext =
+        payload.playbackContext.contentPlaybackContext || {};
+      if (
+        !payload.playbackContext.contentPlaybackContext.signatureTimestamp &&
+        typeof window.ytcfg?.get === "function"
+      ) {
+        payload.playbackContext.contentPlaybackContext.signatureTimestamp =
+          window.ytcfg.get("STS");
       }
       payload.racyCheckOk = true;
       payload.contentCheckOk = true;
@@ -218,11 +296,11 @@
     // Request object -> clone into new Request with sanitized headers/body
     if (typeof Request !== "undefined" && input instanceof Request) {
       try {
-        const spoofedHeaders = stripAuthHeaders(normalizeHeadersInit(input.headers));
+        const spoofedHeaders = ensureVisitorHeader(
+          normalizeHeadersInit(input.headers)
+        );
         const spoofedRequest = new Request(input, {
-          credentials: "omit",
-          mode: "cors",
-          cache: "no-store",
+          // Preserve credentials/mode/cache to avoid breaking the player request.
           headers: spoofedHeaders,
           redirect: input.redirect,
           referrer: input.referrer,
@@ -235,7 +313,7 @@
         // When Request was constructed without explicit body in init, constructor reuses original body stream.
         return { input: spoofedRequest, init };
       } catch (error) {
-        console.warn('[IPTUBE-X] Unable to spoof Request payload:', error);
+        console.warn("[IPTUBE-X] Unable to spoof Request payload:", error);
         return { input, init };
       }
     }
@@ -245,10 +323,9 @@
     }
 
     const clonedInit = init ? { ...init } : {};
-    clonedInit.credentials = "omit";
-    clonedInit.mode = clonedInit.mode || "cors";
-    clonedInit.cache = "no-store";
-    clonedInit.headers = stripAuthHeaders(normalizeHeadersInit(clonedInit.headers));
+    clonedInit.headers = ensureVisitorHeader(
+      normalizeHeadersInit(clonedInit.headers)
+    );
     if (typeof clonedInit.body === "string") {
       clonedInit.body = spoofPlayerRequestBody(clonedInit.body);
     }
@@ -280,7 +357,22 @@
     if (!normalized) {
       return null;
     }
-    return BLOCK_URL_PATTERNS.some((regex) => regex.test(normalized)) ? normalized : null;
+    return BLOCK_URL_PATTERNS.some((regex) => regex.test(normalized))
+      ? normalized
+      : null;
+  }
+
+  function enhanceVideoQuality(responseObj) {
+    if (!isObject(responseObj)) return;
+    try {
+      // Only strip premium upsell overlays from player responses.
+      // DO NOT touch streamingData, bitrates, or ABR URLs — modifying those
+      // causes freezing, buffering, and black-screen playback failures.
+      delete responseObj.premiumUpsellRenderer;
+      delete responseObj.upsellDialogRenderer;
+    } catch (error) {
+      // Ignore
+    }
   }
 
   function notifyBlocked(kind, url) {
@@ -291,10 +383,10 @@
           type: "AD_REQUEST_BLOCKED",
           detail: { kind, url }
         },
-        "*"
+        window.location.origin
       );
     } catch (error) {
-      // Swallow cross-origin postMessage issues.
+      // Silently ignore postMessage errors (cross-origin, serialization, etc.)
     }
   }
 
@@ -316,7 +408,9 @@
     }
 
     return keys.some((key) =>
-      /^promotedVideo|^promotedSparkles|^adRenderer|^adSlotRenderer|^sponsoredVideo/i.test(key)
+      /^promotedVideo|^promotedSparkles|^adRenderer|^adSlotRenderer|^sponsoredVideo/i.test(
+        key
+      )
     );
   }
 
@@ -353,11 +447,6 @@
       return false;
     }
 
-    // Force neutralize ERROR status (server-side detection)
-    if (status.status === "ERROR") {
-      return true;
-    }
-
     const reasonParts = [];
     if (typeof status.reason === "string") {
       reasonParts.push(status.reason);
@@ -367,10 +456,18 @@
     }
     const reason = reasonParts.join(" ").toLowerCase();
 
-    // Also neutralize any status with no reason (silent blocks)
-    if (!reason && status.status !== "OK") {
-      return true;
+    // For ERROR status, only neutralize when there is a clear enforcement reason.
+    // Generic errors (network failures, private/deleted videos) must not be overridden
+    // because that leaves the player stuck in a broken "playing" state.
+    if (status.status === "ERROR") {
+      if (!reason) return false;
+      return ENFORCEMENT_REASON_PATTERNS.some((regex) => regex.test(reason));
     }
+
+    // Do NOT neutralize statuses with no reason — a missing reason means the
+    // video is genuinely unavailable (geo-restricted, private, deleted, etc.).
+    // Overriding those to OK causes the player to crash trying to play unplayable content.
+    if (!reason) return false;
 
     return ENFORCEMENT_REASON_PATTERNS.some((regex) => regex.test(reason));
   }
@@ -396,11 +493,11 @@
     }
 
     // Clear account-level enforcement markers
-    ACCOUNT_ENFORCEMENT_KEYS.forEach(key => {
+    ACCOUNT_ENFORCEMENT_KEYS.forEach((key) => {
       if (key in entity) {
-        if (typeof entity[key] === 'boolean') {
+        if (typeof entity[key] === "boolean") {
           entity[key] = false;
-        } else if (typeof entity[key] === 'number') {
+        } else if (typeof entity[key] === "number") {
           entity[key] = 0;
         } else {
           delete entity[key];
@@ -415,14 +512,17 @@
         delete entity.errorScreen;
       }
     }
-    if (isObject(entity.playerResponse) && shouldNeutralizePlayability(entity.playerResponse.playabilityStatus)) {
+    if (
+      isObject(entity.playerResponse) &&
+      shouldNeutralizePlayability(entity.playerResponse.playabilityStatus)
+    ) {
       neutralizePlayability(entity.playerResponse.playabilityStatus);
       delete entity.playerResponse.errorScreen;
     }
 
     // Scrub account data if present
     if (isObject(entity.accountData)) {
-      ACCOUNT_ENFORCEMENT_KEYS.forEach(key => {
+      ACCOUNT_ENFORCEMENT_KEYS.forEach((key) => {
         if (key in entity.accountData) {
           delete entity.accountData[key];
         }
@@ -431,7 +531,7 @@
 
     // Scrub user features
     if (isObject(entity.userFeatures)) {
-      ACCOUNT_ENFORCEMENT_KEYS.forEach(key => {
+      ACCOUNT_ENFORCEMENT_KEYS.forEach((key) => {
         if (key in entity.userFeatures) {
           entity.userFeatures[key] = false;
         }
@@ -476,9 +576,9 @@
         return;
       }
       if (ACCOUNT_ENFORCEMENT_KEYS.has(key)) {
-        if (typeof value === 'boolean') {
+        if (typeof value === "boolean") {
           entity[key] = false;
-        } else if (typeof value === 'number') {
+        } else if (typeof value === "number") {
           entity[key] = 0;
         } else {
           delete entity[key];
@@ -528,15 +628,15 @@
     const keys = Object.keys(obj);
     // Common keys in comment responses
     const commentIndicators = [
-      'commentThreadRenderer',
-      'commentRenderer',
-      'commentsHeaderRenderer',
-      'commentSectionRenderer',
-      'engagementPanelSectionListRenderer',
-      'liveChatRenderer',
-      'commentRepliesRenderer'
+      "commentThreadRenderer",
+      "commentRenderer",
+      "commentsHeaderRenderer",
+      "commentSectionRenderer",
+      "engagementPanelSectionListRenderer",
+      "liveChatRenderer",
+      "commentRepliesRenderer"
     ];
-    return keys.some(key => commentIndicators.includes(key));
+    return keys.some((key) => commentIndicators.includes(key));
   }
 
   /**
@@ -563,10 +663,54 @@
     return entity;
   }
 
+  // Keys present only in YouTube API responses — used as a fast-path signal
+  // to skip the expensive sanitizer on unrelated JSON objects (analytics events,
+  // config blobs, localStorage values, etc.) that YouTube also parses.
+  const YOUTUBE_API_SIGNALS = new Set([
+    "responseContext",
+    "playabilityStatus",
+    "streamingData",
+    "playerAds",
+    "adPlacements",
+    "playerResponse",
+    "contents",
+    "adSlots",
+    "engagementPanels",
+    "frameworkUpdates",
+    "currentVideoEndpoint",
+    "playerOverlays",
+    "watchNextResults",
+    "microformat",
+    "header",
+    "sidebar",
+    "ytInitialData",
+    "ytInitialPlayerResponse"
+  ]);
+
+  function mightBeYouTubeApiResponse(obj) {
+    if (Array.isArray(obj)) return false;
+    const keys = Object.keys(obj);
+    return keys.some(
+      (k) =>
+        YOUTUBE_API_SIGNALS.has(k) ||
+        HARD_BLOCK_KEYS.has(k) ||
+        ENFORCEMENT_RENDERER_KEYS.has(k)
+    );
+  }
+
   function patchJSONParse() {
     const originalParse = JSON.parse;
     JSON.parse = function patchedJSONParse(...args) {
       const parsed = originalParse.apply(this, args);
+      // Skip sanitization for non-objects (strings, numbers, booleans, null)
+      if (!isObject(parsed)) {
+        return parsed;
+      }
+      // Fast-path: skip expensive sanitization for objects that have no
+      // YouTube API signals at the top level (e.g. analytics blobs, config).
+      if (!mightBeYouTubeApiResponse(parsed) && !looksLikeCommentData(parsed)) {
+        return parsed;
+      }
       // If this looks like comment data, use light sanitization to preserve it
       if (looksLikeCommentData(parsed)) {
         return sanitizeLight(parsed);
@@ -582,6 +726,10 @@
     const original = Response.prototype.json;
     Response.prototype.json = function patchedJson(...args) {
       return original.apply(this, args).then((payload) => {
+        // Skip sanitization for non-objects
+        if (!isObject(payload)) {
+          return payload;
+        }
         // If this looks like comment data, use light sanitization
         if (looksLikeCommentData(payload)) {
           return sanitizeLight(payload);
@@ -597,10 +745,7 @@
     }
 
     const originalOpen = XMLHttpRequest.prototype.open;
-    const originalResponseGetter = Object.getOwnPropertyDescriptor(
-      XMLHttpRequest.prototype,
-      "response"
-    )?.get;
+    const sanitizedResponses = new WeakMap();
 
     XMLHttpRequest.prototype.open = function patchedOpen(method, url, ...rest) {
       const blockedUrl = getBlockedUrl(url);
@@ -608,26 +753,179 @@
         notifyBlocked("xhr", blockedUrl);
       }
       this.addEventListener("readystatechange", () => {
-        if (this.readyState === 4 && this.responseType === "json" && this.response) {
-          sanitize(this.response);
+        if (
+          this.readyState === 4 &&
+          this.responseType === "json" &&
+          this.response
+        ) {
+          if (!sanitizedResponses.has(this)) {
+            sanitize(this.response);
+            sanitizedResponses.set(this, true);
+          }
         }
       });
       return originalOpen.call(this, method, url, ...rest);
     };
+  }
 
-    if (originalResponseGetter) {
-      Object.defineProperty(XMLHttpRequest.prototype, "response", {
-        configurable: true,
-        get() {
-          const value = originalResponseGetter.call(this);
-          return sanitize(value);
+  // Premium upsell panel IDs to block
+  const PREMIUM_PANEL_IDS = [
+    "PApremium_upsell",
+    "premium_upsell",
+    "premium-upsell",
+    "GetPremiumPanel",
+    "SPunlimited",
+    "premium_unlimited"
+  ];
+
+  // Premium upsell text patterns to detect in responses
+  const PREMIUM_UPSELL_PATTERNS = [
+    /enjoy\s+enhanced\s+quality\s+with\s+premium/i,
+    /premium.*trial.*for/i,
+    /ad-free\s+youtube/i,
+    /download\s+videos\s+to\s+watch/i,
+    /play\s+videos\s+in\s+the\s+background/i,
+    /youtube\s+music\s+premium/i,
+    /iqd\s*0/i,
+    /month.*trial.*cancel/i,
+    /cancel\s+anytime/i,
+    /get\s+youtube\s+premium/i,
+    /try\s+youtube\s+premium/i,
+    /start\s+free\s+trial/i
+  ];
+
+  // Check if request body contains premium upsell panel
+  async function isPremiumUpsellRequest(init) {
+    if (!init?.body) return false;
+    try {
+      let bodyStr = "";
+
+      if (typeof init.body === "string") {
+        bodyStr = init.body;
+      } else if (init.body instanceof ArrayBuffer) {
+        bodyStr = new TextDecoder().decode(init.body);
+      } else if (init.body instanceof Uint8Array) {
+        bodyStr = new TextDecoder().decode(init.body);
+      } else if (typeof init.body?.text === "function") {
+        bodyStr = await init.body.text();
+      }
+
+      if (!bodyStr) return false;
+
+      // Check for premium panel IDs in the body
+      const lowerBody = bodyStr.toLowerCase();
+      if (
+        PREMIUM_PANEL_IDS.some((id) => lowerBody.includes(id.toLowerCase()))
+      ) {
+        return true;
+      }
+
+      // Also check for upsell-related params
+      if (lowerBody.includes("upsell") || lowerBody.includes("unlimited")) {
+        return true;
+      }
+
+      return false;
+    } catch {
+      return false;
+    }
+  }
+
+  // Check if response data contains premium upsell content
+  function containsPremiumUpsell(data) {
+    if (!isObject(data)) return false;
+
+    try {
+      // Check for specific upsell structures first (cheap checks)
+      if (data.content?.dialogViewModel?.customContent?.upsellViewModel) {
+        return true;
+      }
+      if (data.content?.upsellViewModel) {
+        return true;
+      }
+      if (data.dialogViewModel?.customContent?.upsellViewModel) {
+        return true;
+      }
+      if (data.upsellDialogRenderer || data.premiumUpsellRenderer) {
+        return true;
+      }
+
+      // Only stringify as a last resort, and limit depth to avoid performance hit
+      const jsonStr = JSON.stringify(data).slice(0, 5000);
+
+      // Check for upsell patterns in the JSON
+      if (PREMIUM_UPSELL_PATTERNS.some((pattern) => pattern.test(jsonStr))) {
+        return true;
+      }
+
+      // Check for tracking params that indicate premium upsell
+      if (
+        jsonStr.includes("GetPremiumPanel") ||
+        jsonStr.includes("premium_upsell")
+      ) {
+        return true;
+      }
+    } catch {
+      // Ignore errors
+    }
+
+    return false;
+  }
+
+  // Sanitize premium upsell content from responses
+  function sanitizePremiumUpsell(data) {
+    if (!isObject(data)) return data;
+
+    try {
+      // Remove only clearly upsell-specific keys.
+      // Generic component names like dialogViewModel, buttonViewModel, panelFooterViewModel,
+      // and customContent are used throughout YouTube's player UI — removing them crashes
+      // quality dialogs, like buttons, and player controls.
+      const upsellKeys = [
+        "upsellViewModel",
+        "premiumUpsellRenderer",
+        "premiumUpsellDialogRenderer",
+        "upsellDialogRenderer"
+      ];
+
+      upsellKeys.forEach((key) => {
+        if (data[key]) {
+          delete data[key];
+        }
+        if (data.content?.[key]) {
+          delete data.content[key];
         }
       });
+
+      // Clear content if it only contains upsell
+      if (data.content && Object.keys(data.content).length === 0) {
+        data.content = {};
+      }
+
+      // Return empty response structure for upsell panels
+      if (containsPremiumUpsell(data)) {
+        return { responseContext: data.responseContext || {}, content: {} };
+      }
+    } catch (error) {
+      // Ignore sanitization errors
     }
+
+    return data;
   }
 
   function patchFetch() {
     if (typeof window.fetch !== "function") {
+      return;
+    }
+
+    // Some isolated/sandboxed frames expose a non-writable, non-configurable fetch.
+    // Don't attempt to patch in that case (it can trigger errors in other scripts).
+    const fetchDescriptor = Object.getOwnPropertyDescriptor(window, "fetch");
+    if (
+      fetchDescriptor &&
+      fetchDescriptor.writable === false &&
+      fetchDescriptor.configurable === false
+    ) {
       return;
     }
 
@@ -636,14 +934,103 @@
 
       // Try to override directly first
       try {
-        window.fetch = function patchedFetch(input, init) {
+        window.fetch = async function patchedFetch(input, init) {
           const blockedUrl = getBlockedUrl(input);
           if (blockedUrl) {
             notifyBlocked("fetch", blockedUrl);
-            return Promise.resolve(new Response(null, { status: 204, statusText: "Blocked" }));
+            return new Response(null, { status: 204, statusText: "Blocked" });
           }
-          const { input: spoofedInput, init: spoofedInit } = applyLoggedOutSpoof(input, init);
-          return nativeFetch(spoofedInput, spoofedInit);
+
+          const url = normalizeUrlCandidate(input);
+
+          // Block premium upsell panel requests by checking request body
+          if (url && url.includes("get_panel")) {
+            // Check request body for premium upsell (now async)
+            const isUpsell = await isPremiumUpsellRequest(init);
+            if (isUpsell) {
+              notifyBlocked("fetch", url + " (premium upsell blocked)");
+              return new Response('{"responseContext":{},"content":{}}', {
+                status: 200,
+                statusText: "OK",
+                headers: { "Content-Type": "application/json" }
+              });
+            }
+
+            // Always intercept and sanitize get_panel responses
+            const { input: spoofedInput, init: spoofedInit } =
+              applyLoggedOutSpoof(input, init);
+            const res = await nativeFetch(spoofedInput, spoofedInit);
+
+            if (
+              !res.ok ||
+              !res.headers.get("content-type")?.includes("application/json")
+            ) {
+              return res;
+            }
+
+            try {
+              const text = await res.text();
+              const data = JSON.parse(text);
+
+              // Check if response contains premium upsell content
+              if (containsPremiumUpsell(data)) {
+                notifyBlocked(
+                  "fetch",
+                  url + " (premium upsell response blocked)"
+                );
+                const sanitized = sanitizePremiumUpsell(data);
+                return new Response(JSON.stringify(sanitized), {
+                  status: res.status,
+                  statusText: res.statusText,
+                  headers: res.headers
+                });
+              }
+
+              return new Response(text, {
+                status: res.status,
+                statusText: res.statusText,
+                headers: res.headers
+              });
+            } catch (error) {
+              return res;
+            }
+          }
+
+          const { input: spoofedInput, init: spoofedInit } =
+            applyLoggedOutSpoof(input, init);
+          const response = await nativeFetch(spoofedInput, spoofedInit);
+
+          // Enhance video quality in player responses
+          if (
+            url &&
+            (/\/youtubei\/v\d+\/player/i.test(url) ||
+              url.includes("player_response"))
+          ) {
+            if (
+              !response.ok ||
+              !response.headers
+                .get("content-type")
+                ?.includes("application/json")
+            ) {
+              return response;
+            }
+
+            try {
+              const text = await response.text();
+              const data = JSON.parse(text);
+              enhanceVideoQuality(data);
+
+              return new Response(JSON.stringify(data), {
+                status: response.status,
+                statusText: response.statusText,
+                headers: response.headers
+              });
+            } catch (error) {
+              return response;
+            }
+          }
+
+          return response;
         };
         return; // Success
       } catch (directError) {
@@ -651,22 +1038,111 @@
       }
 
       // Fallback: use defineProperty to force override
-      Object.defineProperty(window, 'fetch', {
+      Object.defineProperty(window, "fetch", {
         configurable: true,
         enumerable: true,
         writable: true,
-        value: function patchedFetch(input, init) {
+        value: async function patchedFetch(input, init) {
           const blockedUrl = getBlockedUrl(input);
           if (blockedUrl) {
             notifyBlocked("fetch", blockedUrl);
-            return Promise.resolve(new Response(null, { status: 204, statusText: "Blocked" }));
+            return new Response(null, { status: 204, statusText: "Blocked" });
           }
-          const { input: spoofedInput, init: spoofedInit } = applyLoggedOutSpoof(input, init);
-          return nativeFetch(spoofedInput, spoofedInit);
+
+          const url = normalizeUrlCandidate(input);
+
+          // Block premium upsell panel requests by checking request body
+          if (url && url.includes("get_panel")) {
+            // Check request body for premium upsell (now async)
+            const isUpsell = await isPremiumUpsellRequest(init);
+            if (isUpsell) {
+              notifyBlocked("fetch", url + " (premium upsell blocked)");
+              return new Response('{"responseContext":{},"content":{}}', {
+                status: 200,
+                statusText: "OK",
+                headers: { "Content-Type": "application/json" }
+              });
+            }
+
+            // Always intercept and sanitize get_panel responses
+            const { input: spoofedInput, init: spoofedInit } =
+              applyLoggedOutSpoof(input, init);
+            const res = await nativeFetch(spoofedInput, spoofedInit);
+
+            if (
+              !res.ok ||
+              !res.headers.get("content-type")?.includes("application/json")
+            ) {
+              return res;
+            }
+
+            try {
+              const text = await res.text();
+              const data = JSON.parse(text);
+
+              // Check if response contains premium upsell content
+              if (containsPremiumUpsell(data)) {
+                notifyBlocked(
+                  "fetch",
+                  url + " (premium upsell response blocked)"
+                );
+                const sanitized = sanitizePremiumUpsell(data);
+                return new Response(JSON.stringify(sanitized), {
+                  status: res.status,
+                  statusText: res.statusText,
+                  headers: res.headers
+                });
+              }
+
+              return new Response(text, {
+                status: res.status,
+                statusText: res.statusText,
+                headers: res.headers
+              });
+            } catch (error) {
+              return res;
+            }
+          }
+
+          const { input: spoofedInput, init: spoofedInit } =
+            applyLoggedOutSpoof(input, init);
+          const response = await nativeFetch(spoofedInput, spoofedInit);
+
+          // Enhance video quality in player responses
+          if (
+            url &&
+            (/\/youtubei\/v\d+\/player/i.test(url) ||
+              url.includes("player_response"))
+          ) {
+            if (
+              !response.ok ||
+              !response.headers
+                .get("content-type")
+                ?.includes("application/json")
+            ) {
+              return response;
+            }
+
+            try {
+              const text = await response.text();
+              const data = JSON.parse(text);
+              enhanceVideoQuality(data);
+
+              return new Response(JSON.stringify(data), {
+                status: response.status,
+                statusText: response.statusText,
+                headers: response.headers
+              });
+            } catch (error) {
+              return response;
+            }
+          }
+
+          return response;
         }
       });
     } catch (error) {
-      console.warn('[CTF-Blocker] Could not patch fetch:', error);
+      console.warn("[CTF-Blocker] Could not patch fetch:", error);
     }
   }
 
@@ -743,7 +1219,9 @@
       sanitize(args.player_response);
     }
     if (typeof args.raw_player_response === "string") {
-      args.raw_player_response = scrubPlayerResponseString(args.raw_player_response);
+      args.raw_player_response = scrubPlayerResponseString(
+        args.raw_player_response
+      );
     } else if (isObject(args.raw_player_response)) {
       sanitize(args.raw_player_response);
     }
@@ -788,13 +1266,24 @@
           };
         }
 
-        // Keep premium flags to prevent ads
+        // Keep premium flags to prevent ads and enable premium features
         cfg.data_.PREMIUM_SUBSCRIPTION = true;
         cfg.data_.PREMIUM_ADS_DISABLED = true;
+        cfg.data_.PREMIUM_QUALITY_ENABLED = true;
+        cfg.data_.PREMIUM_1080P60_ENABLED = true;
         cfg.data_.ACCOUNT_FEATURES = cfg.data_.ACCOUNT_FEATURES || [];
-        if (!cfg.data_.ACCOUNT_FEATURES.includes('adsfree')) {
-          cfg.data_.ACCOUNT_FEATURES.push('adsfree');
-        }
+        const premiumFeatures = [
+          "adsfree",
+          "premium_quality",
+          "1080p60",
+          "enhanced_bitrate",
+          "premium_streaming"
+        ];
+        premiumFeatures.forEach((feature) => {
+          if (!cfg.data_.ACCOUNT_FEATURES.includes(feature)) {
+            cfg.data_.ACCOUNT_FEATURES.push(feature);
+          }
+        });
       }
 
       if (typeof cfg.get === "function") {
@@ -804,11 +1293,17 @@
           if (key === "EXPERIMENT_FLAGS") {
             disableEnforcementFlags(value);
           }
-          // Report as premium user (keeps ads away)
+          // Report as premium user (keeps ads away and enables premium features)
           if (key === "PREMIUM_SUBSCRIPTION") {
             return true;
           }
           if (key === "PREMIUM_ADS_DISABLED") {
+            return true;
+          }
+          if (key === "PREMIUM_QUALITY_ENABLED") {
+            return true;
+          }
+          if (key === "PREMIUM_1080P60_ENABLED") {
             return true;
           }
           return value;
@@ -853,7 +1348,7 @@
         get() {
           return false;
         },
-        set() { }
+        set() {}
       });
     } catch (error) {
       // best effort
@@ -881,13 +1376,13 @@
         cmd: [],
         pubads() {
           return {
-            addEventListener() { },
-            enableSingleRequest() { },
-            disableInitialLoad() { },
-            collapseEmptyDivs() { }
+            addEventListener() {},
+            enableSingleRequest() {},
+            disableInitialLoad() {},
+            collapseEmptyDivs() {}
           };
         },
-        enableServices() { }
+        enableServices() {}
       };
       window.googletag = placeholder;
     }
@@ -901,7 +1396,7 @@
         get() {
           return 0;
         },
-        set() { }
+        set() {}
       });
     } catch (error) {
       window.google_ad_status = 0;
@@ -912,7 +1407,7 @@
     tagInfo.adCount = 0;
     tagInfo.adSlotIdMap = tagInfo.adSlotIdMap || {};
     tagInfo.initialized = true;
-    tagInfo.saveAdBlockingRecoveryTag = () => { };
+    tagInfo.saveAdBlockingRecoveryTag = () => {};
     tagInfo.used = true;
     tagInfo.disablePublisherConsole = true;
     window.google_tag_info = tagInfo;
@@ -927,7 +1422,11 @@
       const args = config.args;
       scrubPlayerArgs(args);
       if (isObject(args)) {
-        const responseKeys = ["player_response", "raw_player_response", "playerResponse"];
+        const responseKeys = [
+          "player_response",
+          "raw_player_response",
+          "playerResponse"
+        ];
         responseKeys.forEach((key) => {
           if (!(key in args)) {
             return;
@@ -965,7 +1464,8 @@
               return flagStore;
             },
             set(value) {
-              flagStore = typeof value === "string" ? scrubFflagsString(value) : value;
+              flagStore =
+                typeof value === "string" ? scrubFflagsString(value) : value;
             }
           });
         }
@@ -1020,76 +1520,30 @@
     }
   }
 
-  // Fallback: If YouTube refuses to send player response (hard ban), create minimal one
+  // Repair helper: if ytInitialPlayerResponse is missing, try to recover it from ytplayer config.
   function ensurePlayerResponse() {
-    if (!window.ytInitialPlayerResponse || !window.ytInitialPlayerResponse.playabilityStatus) {
-      console.warn('[IPTUBE-X] No player response detected - injecting fallback');
+    try {
+      if (window.ytInitialPlayerResponse?.playabilityStatus) {
+        return;
+      }
 
-      // Try to get video ID from URL
-      const urlParams = new URLSearchParams(window.location.search);
-      const videoId = urlParams.get('v') || '';
+      const args = window.ytplayer?.config?.args;
+      if (!args) {
+        return;
+      }
 
-      window.ytInitialPlayerResponse = {
-        playabilityStatus: {
-          status: 'OK',
-          playableInEmbed: true
-        },
-        streamingData: {
-          expiresInSeconds: '21540',
-          formats: [],
-          adaptiveFormats: []
-        },
-        videoDetails: {
-          videoId: videoId,
-          title: 'Video',
-          lengthSeconds: '0',
-          channelId: '',
-          isOwnerViewing: false,
-          shortDescription: '',
-          isCrawlable: true,
-          thumbnail: {
-            thumbnails: []
-          },
-          allowRatings: true,
-          viewCount: '0',
-          author: '',
-          isPrivate: false,
-          isUnpluggedCorpus: false,
-          isLiveContent: false
-        },
-        microformat: {
-          playerMicroformatRenderer: {
-            thumbnail: {
-              thumbnails: []
-            },
-            embed: {
-              iframeUrl: `https://www.youtube.com/embed/${videoId}`,
-              flashUrl: '',
-              width: 1280,
-              height: 720,
-              flashSecureUrl: ''
-            },
-            title: {
-              simpleText: 'Video'
-            },
-            description: {
-              simpleText: ''
-            },
-            lengthSeconds: '0',
-            ownerProfileUrl: '',
-            externalChannelId: '',
-            isFamilySafe: true,
-            availableCountries: ['US'],
-            isUnlisted: false,
-            hasYpcMetadata: false,
-            viewCount: '0',
-            category: 'Entertainment',
-            publishDate: new Date().toISOString().split('T')[0],
-            ownerChannelName: '',
-            uploadDate: new Date().toISOString().split('T')[0]
-          }
-        }
-      };
+      const candidate = args.player_response || args.raw_player_response;
+      if (!candidate) {
+        return;
+      }
+
+      const parsed =
+        typeof candidate === "string" ? JSON.parse(candidate) : candidate;
+      if (parsed?.playabilityStatus) {
+        window.ytInitialPlayerResponse = parsed;
+      }
+    } catch (error) {
+      // Ignore parse/shape errors; avoid injecting a fake response.
     }
   }
 
@@ -1105,13 +1559,13 @@
   spoofGoogleAdStatus();
   patchYtPlayer();
 
-  // Ensure player response exists before page loads
-  ensurePlayerResponse();
-
-  // Re-check after DOM loads in case it was cleared
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', ensurePlayerResponse);
-  } else {
-    setTimeout(ensurePlayerResponse, 100);
+  // Attempt recovery after ytplayer config has had a chance to initialize.
+  setTimeout(ensurePlayerResponse, 500);
+  if (document.readyState === "loading") {
+    document.addEventListener(
+      "DOMContentLoaded",
+      () => setTimeout(ensurePlayerResponse, 500),
+      { once: true }
+    );
   }
 })();

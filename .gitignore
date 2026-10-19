@@ -15,3 +15,13 @@ desktop.ini
 # Temporary files
 *.tmp
 *.temp
+
+# Local builds and browser verification artifacts
+dist/
+output/
+.playwright-cli/
+node_modules/
+extension/_metadata/
+.env
+.env.*
+!.env.example

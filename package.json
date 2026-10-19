@@ -1,0 +1,27 @@
+{
+  "name": "iptube-extension",
+  "private": true,
+  "scripts": {
+    "test": "node scripts/test.cjs",
+    "test:verify": "node scripts/verify-tests.cjs",
+    "validate": "node scripts/validate.cjs",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "check": "npm run format:check && npm run validate && npm test",
+    "package": "npm run validate && node scripts/package.cjs",
+    "assets:generate": "node scripts/generate-theme.cjs && prettier --write \"extension/background/*.svg\" extension/spatial-audio.svg"
+  },
+  "devDependencies": {
+    "prettier": "3.8.2"
+  },
+  "version": "2.3.0",
+  "description": "Desktop YouTube enhancements and Stranger Things cinematic effects.",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Mustafa1p/Anti-Youtube-Ads-Extension-.git"
+  },
+  "engines": {
+    "node": ">=22"
+  }
+}

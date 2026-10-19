@@ -1,0 +1,16 @@
+name: Feature request
+description: Propose a desktop-browser improvement
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: What problem would this solve?
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed behavior
+      description: Describe how someone would use it and any alternatives you considered.
+    validations:
+      required: true

@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+  <title>Spatial audio</title>
+  <g fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round">
+    <circle cx="16" cy="16" r="3" />
+    <path
+      d="M10 10a9 9 0 0 0 0 12m12 -12a9 9 0 0 1 0 12M6 6a14 14 0 0 0 0 20M26 6a14 14 0 0 1 0 20"
+    />
+  </g>
+</svg>

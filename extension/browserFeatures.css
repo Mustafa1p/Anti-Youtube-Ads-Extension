@@ -1,0 +1,50 @@
+html.iptube-audio-only #movie_player video,
+html.iptube-audio-only #movie_player .ytp-cued-thumbnail-overlay-image {
+  opacity: 0 !important;
+}
+html.iptube-audio-only #movie_player::before {
+  content: "AUDIO MODE · IPTUBE";
+  position: absolute;
+  inset: 40% 0 auto;
+  text-align: center;
+  color: #ff5366;
+  font:
+    bold 18px Georgia,
+    serif;
+  letter-spacing: 4px;
+  pointer-events: none;
+  z-index: 1;
+}
+html.iptube-hide-logo ytd-topbar-logo-renderer {
+  visibility: hidden !important;
+}
+#iptube-clock,
+#iptube-feature-toast {
+  position: fixed;
+  z-index: 2147483647;
+  color: #fff;
+  background: rgba(12, 4, 8, 0.92);
+  border: 1px solid #ad233b;
+  border-radius: 8px;
+  padding: 10px 14px;
+  font:
+    14px system-ui,
+    sans-serif;
+  pointer-events: none;
+}
+#iptube-clock {
+  top: 72px;
+  right: 20px;
+  font-variant-numeric: tabular-nums;
+}
+#iptube-feature-toast {
+  bottom: 86px;
+  left: 24px;
+}
+html.iptube-reduce-motion body::before,
+html.iptube-reduce-motion body::after,
+html.iptube-reduce-motion [class^="st-"],
+html.iptube-reduce-motion .ctf-brand-text {
+  animation: none !important;
+  transition: none !important;
+}

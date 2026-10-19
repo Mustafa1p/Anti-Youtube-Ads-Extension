@@ -4,9 +4,8 @@
     "priority": 1,
     "action": { "type": "block" },
     "condition": {
-      "urlFilter": "https://www.youtube.com/api/stats/ads",
-      "resourceTypes": ["xmlhttprequest", "script"],
-      "initiatorDomains": ["www.youtube.com"]
+      "regexFilter": "googlevideo\\.com/videoplayback.*[&?]oad=",
+      "resourceTypes": ["media", "xmlhttprequest", "other"]
     }
   },
   {
@@ -14,9 +13,8 @@
     "priority": 1,
     "action": { "type": "block" },
     "condition": {
-      "urlFilter": "https://www.youtube.com/get_midroll_info",
-      "resourceTypes": ["xmlhttprequest", "script"],
-      "initiatorDomains": ["www.youtube.com"]
+      "urlFilter": "||googlevideo.com/videoplayback*&ctier=L",
+      "resourceTypes": ["media", "xmlhttprequest", "other"]
     }
   },
   {
@@ -24,9 +22,8 @@
     "priority": 1,
     "action": { "type": "block" },
     "condition": {
-      "urlFilter": "doubleclick.net",
-      "resourceTypes": ["sub_frame", "image", "xmlhttprequest", "media"],
-      "domainType": "thirdParty"
+      "urlFilter": "&ad_type=",
+      "resourceTypes": ["media", "xmlhttprequest"]
     }
   },
   {
@@ -34,10 +31,8 @@
     "priority": 1,
     "action": { "type": "block" },
     "condition": {
-      "regexFilter": "^https:\\/\\/r[0-9]+---sn-[a-z0-9]+\\.googlevideo\\.com\\/.*(oad|adformat)",
-      "resourceTypes": ["media", "xmlhttprequest"],
-      "initiatorDomains": ["www.youtube.com"],
-      "domainType": "thirdParty"
+      "urlFilter": "&adformat=",
+      "resourceTypes": ["media", "xmlhttprequest"]
     }
   },
   {
@@ -45,9 +40,8 @@
     "priority": 1,
     "action": { "type": "block" },
     "condition": {
-      "urlFilter": "youtube.com/pagead/",
-      "resourceTypes": ["xmlhttprequest", "script", "sub_frame"],
-      "initiatorDomains": ["www.youtube.com", "m.youtube.com"]
+      "urlFilter": "||youtube.com/api/stats/ads",
+      "resourceTypes": ["xmlhttprequest", "ping", "image", "other"]
     }
   },
   {
@@ -55,9 +49,8 @@
     "priority": 1,
     "action": { "type": "block" },
     "condition": {
-      "urlFilter": "youtubei/v1/player/ad_break",
-      "resourceTypes": ["xmlhttprequest"],
-      "initiatorDomains": ["www.youtube.com"]
+      "urlFilter": "||youtube.com/pagead/",
+      "resourceTypes": ["xmlhttprequest", "script", "image", "sub_frame"]
     }
   },
   {
@@ -65,9 +58,8 @@
     "priority": 1,
     "action": { "type": "block" },
     "condition": {
-      "urlFilter": "youtube.com/api/stats/qoe?adcontext",
-      "resourceTypes": ["xmlhttprequest"],
-      "initiatorDomains": ["www.youtube.com", "m.youtube.com"]
+      "urlFilter": "||doubleclick.net/pagead/",
+      "resourceTypes": ["xmlhttprequest", "script", "image", "sub_frame"]
     }
   },
   {
@@ -75,9 +67,8 @@
     "priority": 1,
     "action": { "type": "block" },
     "condition": {
-      "urlFilter": "googleads.g.doubleclick.net/pagead/",
-      "resourceTypes": ["sub_frame", "xmlhttprequest", "script", "image"],
-      "domainType": "thirdParty"
+      "urlFilter": "||youtube.com/ptracking",
+      "resourceTypes": ["xmlhttprequest", "ping", "image"]
     }
   },
   {
@@ -85,9 +76,8 @@
     "priority": 1,
     "action": { "type": "block" },
     "condition": {
-      "urlFilter": "pubads.g.doubleclick.net/gampad/ads",
-      "resourceTypes": ["sub_frame", "xmlhttprequest", "media"],
-      "domainType": "thirdParty"
+      "urlFilter": "||youtube.com/get_midroll_info",
+      "resourceTypes": ["xmlhttprequest"]
     }
   },
   {
@@ -95,9 +85,14 @@
     "priority": 1,
     "action": { "type": "block" },
     "condition": {
-      "urlFilter": "static.doubleclick.net/instream/ad_status.js",
-      "resourceTypes": ["script", "image"],
-      "domainType": "thirdParty"
+      "urlFilter": "||googleads.g.doubleclick.net/",
+      "resourceTypes": [
+        "xmlhttprequest",
+        "script",
+        "image",
+        "sub_frame",
+        "ping"
+      ]
     }
   },
   {
@@ -105,9 +100,8 @@
     "priority": 1,
     "action": { "type": "block" },
     "condition": {
-      "regexFilter": "youtubei\\/v1\\/player.*(oad=|adformat=|ctier=)",
-      "resourceTypes": ["xmlhttprequest"],
-      "initiatorDomains": ["www.youtube.com", "m.youtube.com"]
+      "urlFilter": "||youtube.com/youtubei/v1/player/ad_break",
+      "resourceTypes": ["xmlhttprequest"]
     }
   },
   {
@@ -115,9 +109,8 @@
     "priority": 1,
     "action": { "type": "block" },
     "condition": {
-      "regexFilter": "youtubei\\/v1\\/next.*(adSignals|adPlacements)",
-      "resourceTypes": ["xmlhttprequest"],
-      "initiatorDomains": ["www.youtube.com", "m.youtube.com"]
+      "urlFilter": "||static.doubleclick.net/",
+      "resourceTypes": ["script", "image", "xmlhttprequest"]
     }
   },
   {
@@ -125,9 +118,174 @@
     "priority": 1,
     "action": { "type": "block" },
     "condition": {
-      "regexFilter": "youtube\\.com\\/api\\/stats\\/watchtime.*(el=adunit|is_ad=1|adformat=)",
-      "resourceTypes": ["xmlhttprequest", "image"],
-      "initiatorDomains": ["www.youtube.com", "m.youtube.com"]
+      "urlFilter": "||www.google.com/pagead/",
+      "resourceTypes": ["xmlhttprequest", "script", "image", "sub_frame"]
+    }
+  },
+  {
+    "id": 14,
+    "priority": 1,
+    "action": { "type": "block" },
+    "condition": {
+      "urlFilter": "||yt3.ggpht.com/*-ad-",
+      "resourceTypes": ["image"]
+    }
+  },
+  {
+    "id": 15,
+    "priority": 1,
+    "action": { "type": "block" },
+    "condition": {
+      "urlFilter": "||youtube.com/error_204*adformat",
+      "resourceTypes": ["xmlhttprequest", "ping"]
+    }
+  },
+  {
+    "id": 16,
+    "priority": 1,
+    "action": { "type": "block" },
+    "condition": {
+      "urlFilter": "||ads.youtube.com/",
+      "resourceTypes": [
+        "xmlhttprequest",
+        "script",
+        "image",
+        "sub_frame",
+        "ping",
+        "media"
+      ]
+    }
+  },
+  {
+    "id": 17,
+    "priority": 1,
+    "action": { "type": "block" },
+    "condition": {
+      "urlFilter": "||googleadservices.com/",
+      "resourceTypes": ["xmlhttprequest", "script", "image", "sub_frame"]
+    }
+  },
+  {
+    "id": 18,
+    "priority": 1,
+    "action": { "type": "block" },
+    "condition": {
+      "urlFilter": "||googlesyndication.com/",
+      "resourceTypes": ["xmlhttprequest", "script", "image", "sub_frame"]
+    }
+  },
+  {
+    "id": 19,
+    "priority": 1,
+    "action": { "type": "block" },
+    "condition": {
+      "urlFilter": "||youtube.com/api/stats/qoe*adformat",
+      "resourceTypes": ["xmlhttprequest", "ping", "image"]
+    }
+  },
+  {
+    "id": 20,
+    "priority": 1,
+    "action": { "type": "block" },
+    "condition": {
+      "urlFilter": "||youtube.com/api/stats/watchtime*ad_break",
+      "resourceTypes": ["xmlhttprequest", "ping"]
+    }
+  },
+  {
+    "id": 21,
+    "priority": 1,
+    "action": { "type": "block" },
+    "condition": {
+      "urlFilter": "||doubleclick.net/ddm/",
+      "resourceTypes": [
+        "xmlhttprequest",
+        "script",
+        "image",
+        "sub_frame",
+        "ping"
+      ]
+    }
+  },
+  {
+    "id": 22,
+    "priority": 1,
+    "action": { "type": "block" },
+    "condition": {
+      "urlFilter": "||adservice.google.com/",
+      "resourceTypes": ["xmlhttprequest", "script", "image", "sub_frame"]
+    }
+  },
+  {
+    "id": 23,
+    "priority": 1,
+    "action": { "type": "block" },
+    "condition": {
+      "urlFilter": "||adservice.google.*/",
+      "resourceTypes": ["xmlhttprequest", "script", "image", "sub_frame"]
+    }
+  },
+  {
+    "id": 24,
+    "priority": 1,
+    "action": { "type": "block" },
+    "condition": {
+      "urlFilter": "||youtube.com/youtubei/*/log_event*ad",
+      "resourceTypes": ["xmlhttprequest", "ping"]
+    }
+  },
+  {
+    "id": 25,
+    "priority": 1,
+    "action": { "type": "block" },
+    "condition": {
+      "urlFilter": "||youtube.com/youtubei/*/survey",
+      "resourceTypes": ["xmlhttprequest"]
+    }
+  },
+  {
+    "id": 26,
+    "priority": 1,
+    "action": { "type": "block" },
+    "condition": {
+      "urlFilter": "||youtube.com/youtubei/*/ad_break",
+      "resourceTypes": ["xmlhttprequest"]
+    }
+  },
+  {
+    "id": 27,
+    "priority": 2,
+    "action": { "type": "allow" },
+    "condition": {
+      "urlFilter": "||youtube.com/youtubei/*/player",
+      "resourceTypes": ["xmlhttprequest"]
+    }
+  },
+  {
+    "id": 28,
+    "priority": 2,
+    "action": { "type": "allow" },
+    "condition": {
+      "urlFilter": "||youtube.com/youtubei/*/next",
+      "resourceTypes": ["xmlhttprequest"]
+    }
+  },
+  {
+    "id": 29,
+    "priority": 2,
+    "action": { "type": "allow" },
+    "condition": {
+      "urlFilter": "||youtube.com/youtubei/*/browse",
+      "resourceTypes": ["xmlhttprequest"]
+    }
+  },
+  {
+    "id": 30,
+    "priority": 2,
+    "action": { "type": "allow" },
+    "condition": {
+      "urlFilter": "||youtube.com/youtubei/*/search",
+      "resourceTypes": ["xmlhttprequest"]
     }
   }
 ]
