@@ -124,7 +124,7 @@ See **[the implementation notes](docs/webos-research.md)** for the source map, d
 
 Preferences and ambilight video IDs are stored in `chrome.storage.local`. The extension does not add an analytics backend.
 
-**SponsorBlock is off by default.** When enabled, its service receives a four-character SHA-256 prefix of the current video ID and the selected categories. The response contains a bucket of candidate videos, which is filtered locally. No cookies or account credentials are included, but the service can see your IP address; a short hash prefix is not a guarantee of anonymity. See [SponsorBlock's privacy policy](https://sponsor.ajay.app/privacy/).
+**SponsorBlock is off by default.** When enabled, its service receives a four-character SHA-256 prefix of the current video ID and the selected categories. The response contains a bucket of candidate videos, which is filtered locally. No cookies or account credentials are included, but the service can see your IP address; a short hash prefix is not a guarantee of anonymity.
 
 YouTube host access supports page integration and network rules. The SponsorBlock host permission allows the service worker's optional API request. Storage saves settings and counters. The existing browsing-data permission clears YouTube cache/site storage on install or update while preserving cookies; some local YouTube preferences may reset. The network-debug permission supports request-count diagnostics in unpacked development builds. Unused scripting and active-tab permissions have been removed.
 
