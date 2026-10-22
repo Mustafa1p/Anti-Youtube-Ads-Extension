@@ -185,3 +185,201 @@ test("invalid stored counts recover and counters stay within safe integer range"
     Number.MAX_SAFE_INTEGER
   );
 });
+
+test("earlyPatch scrubs ad keys and Shorts reel ad markers from JSON responses", () => {
+  function MockResponse(body, init) {
+    this._body = typeof body === "string" ? body : "";
+    this.status = init && init.status != null ? init.status : 200;
+    this.ok = this.status >= 200 && this.status < 300;
+    this.headers = { get: () => null };
+  }
+  MockResponse.prototype.json = async function () {
+    return {};
+  };
+  MockResponse.prototype.text = async function () {
+    return this._body;
+  };
+
+  const ctx = vm.createContext({
+    console,
+    URL,
+    btoa: globalThis.btoa,
+    atob: globalThis.atob,
+    document: { readyState: "complete", addEventListener() {}, cookie: "" },
+    navigator: {},
+    postMessage() {},
+    fetch: async () => new MockResponse("{}", { status: 200 }),
+    Response: MockResponse,
+    Request: class {
+      constructor(url, init = {}) {
+        this.url = typeof url === "string" ? url : (url && url.url) || "";
+        this.headers = (init && init.headers) || {};
+        for (const k of [
+          "redirect",
+          "referrer",
+          "referrerPolicy",
+          "integrity",
+          "keepalive",
+          "signal"
+        ]) {
+          this[k] = init && init[k];
+        }
+      }
+    },
+    Headers: class {
+      constructor(init = {}) {
+        this._d = Array.isArray(init)
+          ? Object.fromEntries(init)
+          : { ...init };
+      }
+      forEach(cb) {
+        Object.entries(this._d).forEach(([k, v]) => cb(v, k));
+      }
+    },
+    XMLHttpRequest: class {
+      open() {}
+      addEventListener() {}
+    },
+    setTimeout: () => 1,
+    clearTimeout() {},
+    setInterval: () => 1,
+    clearInterval() {}
+  });
+  ctx.window = ctx;
+
+  vm.runInContext(source("earlyPatch.js"), ctx);
+
+  // adPlacements and playerAds stripped; non-ad keys preserved
+  const r1 = vm.runInContext(
+    `JSON.parse('{"responseContext":{},"adPlacements":[1],"playerAds":{"x":1},"contents":{"y":2}}')`,
+    ctx
+  );
+  assert.ok(!("adPlacements" in r1), "adPlacements must be stripped");
+  assert.ok(!("playerAds" in r1), "playerAds must be stripped");
+  assert.ok("contents" in r1, "non-ad key must be preserved");
+
+  // adClientParams in Shorts reel entries stripped (matches Brave json-prune-fetch-response rule)
+  const r2 = vm.runInContext(
+    `JSON.parse('{"responseContext":{},"entries":[{"command":{"reelWatchEndpoint":{"adClientParams":{"isAd":true},"videoId":"testId"}}}]}')`,
+    ctx
+  );
+  assert.ok(
+    !("adClientParams" in r2.entries[0].command.reelWatchEndpoint),
+    "adClientParams must be stripped from Shorts reel entries"
+  );
+  assert.equal(
+    r2.entries[0].command.reelWatchEndpoint.videoId,
+    "testId",
+    "non-ad reel keys preserved"
+  );
+
+  // Enforcement renderer stripped
+  const r3 = vm.runInContext(
+    `JSON.parse('{"responseContext":{},"adBlockerMessageRenderer":{"text":"Disable your ad blocker"}}')`,
+    ctx
+  );
+  assert.ok(
+    !("adBlockerMessageRenderer" in r3),
+    "enforcement renderer must be stripped"
+  );
+
+  // Blocked playabilityStatus neutralized to OK
+  const r4 = vm.runInContext(
+    `JSON.parse('{"responseContext":{},"playabilityStatus":{"status":"UNPLAYABLE","reason":"Ad blockers violate Terms of Service"}}')`,
+    ctx
+  );
+  assert.equal(
+    r4.playabilityStatus.status,
+    "OK",
+    "enforcement playabilityStatus must be neutralized"
+  );
+
+  // Non-YouTube analytics JSON passes through unchanged
+  const r5 = vm.runInContext(
+    `JSON.parse('{"event":"pageview","timestamp":123}')`,
+    ctx
+  );
+  assert.equal(r5.event, "pageview");
+  assert.equal(r5.timestamp, 123);
+
+  // ytInitialPlayerResponse global sanitized on assignment (matches Brave set scriptlets)
+  vm.runInContext(
+    `window.ytInitialPlayerResponse = { responseContext: {}, playabilityStatus: { status: "OK" }, adPlacements: [1, 2] }`,
+    ctx
+  );
+  const ipr = vm.runInContext("window.ytInitialPlayerResponse", ctx);
+  assert.ok(
+    !("adPlacements" in ipr),
+    "adPlacements must be stripped from ytInitialPlayerResponse"
+  );
+  assert.equal(ipr.playabilityStatus.status, "OK", "valid playabilityStatus preserved");
+});
+
+test("network rules cover Brave-equivalent YouTube ad patterns", () => {
+  const rules = JSON.parse(source("rules/rules_1.json"));
+
+  // All IDs unique, all rules structurally valid
+  const ids = rules.map((r) => r.id);
+  assert.equal(new Set(ids).size, ids.length, "rule IDs must be unique");
+  rules.forEach((r) => {
+    assert.ok(r.action && r.condition, `rule ${r.id} requires action and condition`);
+    if (r.priority !== undefined) {
+      assert.ok(
+        Number.isInteger(r.priority) && r.priority > 0,
+        `rule ${r.id} priority invalid`
+      );
+    }
+  });
+
+  // Allow rules must outprioritize block rules
+  const allowRules = rules.filter((r) => r.action.type === "allow");
+  assert.ok(allowRules.length > 0, "allow rules must exist");
+  allowRules.forEach((r) =>
+    assert.ok(
+      r.priority > 1,
+      `allow rule ${r.id} must have priority > 1 to outrank block rules`
+    )
+  );
+
+  // TVHTML5 ad initplayback rule (matches Brave: ||googlevideo.com/initplayback?source=youtube&*c=TVHTML5&*oad=)
+  const tvRule = rules.find(
+    (r) =>
+      r.action.type === "block" && r.condition.regexFilter?.includes("TVHTML5")
+  );
+  assert.ok(tvRule, "TVHTML5 initplayback block rule must exist");
+  const tvRe = new RegExp(tvRule.condition.regexFilter);
+  assert.ok(
+    tvRe.test(
+      "https://r1---sn-abc.googlevideo.com/initplayback?source=youtube&c=TVHTML5&oad=1"
+    ),
+    "TVHTML5 rule must match TVHTML5 ad init URL"
+  );
+  assert.ok(
+    !tvRe.test(
+      "https://r1---sn-abc.googlevideo.com/initplayback?source=youtube&c=WEB&oad=1"
+    ),
+    "TVHTML5 rule must not match non-TVHTML5 init"
+  );
+
+  // _ad_ media rule (matches Brave: *_ad_$media,domain=youtube.com,3p)
+  const adMediaRule = rules.find(
+    (r) =>
+      r.action.type === "block" &&
+      r.condition.regexFilter?.includes("_ad_") &&
+      r.condition.resourceTypes?.includes("media")
+  );
+  assert.ok(adMediaRule, "_ad_ media blocking rule must exist");
+  const adRe = new RegExp(adMediaRule.condition.regexFilter);
+  assert.ok(
+    adRe.test(
+      "https://r5.googlevideo.com/videoplayback?id=xyz_ad_1234&other=params"
+    ),
+    "_ad_ rule must match ad media URL"
+  );
+  assert.ok(
+    !adRe.test(
+      "https://r5.googlevideo.com/videoplayback?id=normalvideo&other=params"
+    ),
+    "_ad_ rule must not match normal media URL"
+  );
+});

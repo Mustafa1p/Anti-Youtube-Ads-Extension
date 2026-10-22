@@ -253,6 +253,24 @@
     }
   },
   {
+    "id": 31,
+    "priority": 1,
+    "action": { "type": "block" },
+    "condition": {
+      "regexFilter": "googlevideo\\.com/initplayback.*c=TVHTML5.*oad=",
+      "resourceTypes": ["xmlhttprequest", "other"]
+    }
+  },
+  {
+    "id": 32,
+    "priority": 1,
+    "action": { "type": "block" },
+    "condition": {
+      "regexFilter": "googlevideo\\.com/videoplayback.*_ad_",
+      "resourceTypes": ["media", "xmlhttprequest", "other"]
+    }
+  },
+  {
     "id": 27,
     "priority": 2,
     "action": { "type": "allow" },
