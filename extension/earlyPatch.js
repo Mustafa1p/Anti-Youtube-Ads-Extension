@@ -3,6 +3,43 @@
 (() => {
   "use strict";
 
+  // Capture native Function.prototype.toString BEFORE any patches so every
+  // patched function can be registered and returned as "[native code]".
+  // YouTube's primary ad-blocker detection check is:
+  //   Function.prototype.toString.call(window.fetch) !== "function fetch() { [native code] }"
+  const _nativeToString = Function.prototype.toString;
+  const _nativified = new WeakSet();
+  function nativefy(fn, original) {
+    _nativified.add(fn);
+    try {
+      Object.defineProperty(fn, "name", {
+        value:
+          (typeof original === "function" ? original.name : null) ||
+          fn.name ||
+          "",
+        configurable: true,
+        enumerable: false,
+        writable: false
+      });
+    } catch (_e) {}
+    return fn;
+  }
+  try {
+    const _patchedToString = function toString() {
+      if (_nativified.has(this)) {
+        return `function ${this.name || ""}() { [native code] }`;
+      }
+      return _nativeToString.call(this);
+    };
+    _nativified.add(_patchedToString);
+    Object.defineProperty(Function.prototype, "toString", {
+      value: _patchedToString,
+      configurable: true,
+      enumerable: false,
+      writable: true
+    });
+  } catch (_e) {}
+
   // Patch postMessage to suppress cross-origin errors from YouTube's internal code
   // (e.g., youtube.com <-> studio.youtube.com communication)
   const originalPostMessage = window.postMessage.bind(window);
@@ -56,6 +93,7 @@
       throw error;
     }
   };
+  nativefy(window.postMessage, originalPostMessage);
 
   const HARD_BLOCK_KEYS = new Set([
     "adPlacements",
@@ -717,6 +755,7 @@
       }
       return sanitize(parsed);
     };
+    nativefy(JSON.parse, originalParse);
   }
 
   function patchResponseJson() {
@@ -737,6 +776,7 @@
         return sanitize(payload);
       });
     };
+    nativefy(Response.prototype.json, original);
   }
 
   function patchXHR() {
@@ -766,6 +806,7 @@
       });
       return originalOpen.call(this, method, url, ...rest);
     };
+    nativefy(XMLHttpRequest.prototype.open, originalOpen);
   }
 
   // Premium upsell panel IDs to block
@@ -1032,6 +1073,7 @@
 
           return response;
         };
+        nativefy(window.fetch, nativeFetch);
         return; // Success
       } catch (directError) {
         // Property is read-only, try defineProperty
@@ -1141,6 +1183,7 @@
           return response;
         }
       });
+      nativefy(window.fetch, nativeFetch);
     } catch (error) {
       console.warn("[CTF-Blocker] Could not patch fetch:", error);
     }
@@ -1159,6 +1202,7 @@
       }
       return nativeBeacon(resource, data);
     };
+    nativefy(navigator.sendBeacon, nativeBeacon);
   }
 
   function disableEnforcementFlags(flags) {

@@ -313,6 +313,18 @@ test("earlyPatch scrubs ad keys and Shorts reel ad markers from JSON responses",
     "adPlacements must be stripped from ytInitialPlayerResponse"
   );
   assert.equal(ipr.playabilityStatus.status, "OK", "valid playabilityStatus preserved");
+
+  // Patched functions look native — YouTube's primary detection check
+  const fetchStr = vm.runInContext("Function.prototype.toString.call(window.fetch)", ctx);
+  assert.ok(
+    /\[native code\]/.test(fetchStr),
+    "window.fetch must appear native after patching"
+  );
+  const jsonParseStr = vm.runInContext("Function.prototype.toString.call(JSON.parse)", ctx);
+  assert.ok(
+    /\[native code\]/.test(jsonParseStr),
+    "JSON.parse must appear native after patching"
+  );
 });
 
 test("network rules cover Brave-equivalent YouTube ad patterns", () => {
