@@ -1,5 +1,11 @@
 # Changelog
 
+## 2.3.2 — 2026-11-04
+
+- Fail the browser smoke test when its service worker logs console errors, before reporting success.
+- Explain how to install Playwright and Chromium when the optional browser test dependency is missing.
+- Use full Chromium for headless extension testing and add regression coverage for smoke-test success and failure paths.
+
 ## 2.3.1 — 2026-11-04
 
 - Replace broad page API, visitor identity, integrity and enforcement patches with exact successful-player ad cleanup. Preserve native playback errors and verification UI.

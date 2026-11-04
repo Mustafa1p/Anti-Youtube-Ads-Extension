@@ -58,7 +58,7 @@
 
         const subtitle = document.createElement("a");
         subtitle.className = "st-logo-subtitle";
-        subtitle.innerText = "Created by IP | V2.3.1";
+        subtitle.innerText = "Created by IP | V2.3.2";
         subtitle.href = "https://instagram.com/tofa";
         subtitle.target = "_blank";
         subtitle.rel = "noopener noreferrer";
