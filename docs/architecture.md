@@ -2,6 +2,14 @@
 
 This document describes the desktop extension's runtime design and compatibility boundaries.
 
+## Ad cleanup and recovery
+
+`playbackSafety.js` runs at document_start in the isolated world and reads `adBlockingEnabled`. The MAIN-world cleanup remains inactive until that stored preference is available. It observes one root attribute, installs narrow parsing hooks when enabled, and restores hooks it still owns when paused. It never changes request bodies, visitor headers, integrity flags, stream URLs, blocked playback states or site storage. Initial inline responses may arrive before settings and escape cleanup.
+
+`adBlockingService.js` serializes mode changes with network ruleset updates. Static rules default off; the worker reconciles the stored preference on startup and install/update. A successful toggle reply confirms both the ruleset change and saved page preference. The popup requests a reload to discard earlier response/DOM mutations. Recognized enforcement renderers retain their native UI and get an explicit recovery button; no automatic retry loop runs.
+
+DOM ad cleanup uses visible native skip controls without seeking or changing player ad classes. Remaining blocking rules target explicit ad-serving endpoints and have a YouTube initiator scope. See [research and limitations](youtube-playback-research.md) for sources, failure mechanisms, and the account-level validation still needed.
+
 ## Browser-specific decisions
 
 ### SponsorBlock

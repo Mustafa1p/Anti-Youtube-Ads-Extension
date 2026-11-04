@@ -2,12 +2,11 @@
   "manifest_version": 3,
   "name": "STRANGER THINGS EDITION",
   "description": "YouTube ad cleanup, optional SponsorBlock, playback tools, and Stranger Things effects for desktop browsers.",
-  "version": "2.3.0",
+  "version": "2.3.1",
   "permissions": [
     "declarativeNetRequest",
     "declarativeNetRequestFeedback",
-    "storage",
-    "browsingData"
+    "storage"
   ],
   "host_permissions": [
     "https://www.youtube.com/*",
@@ -21,14 +20,8 @@
   "content_scripts": [
     {
       "matches": ["https://www.youtube.com/*"],
-      "js": ["storageSanitizer.js"],
+      "js": ["playbackSafety.js"],
       "run_at": "document_start"
-    },
-    {
-      "matches": ["https://www.youtube.com/*"],
-      "js": ["antiBot.js"],
-      "run_at": "document_start",
-      "world": "MAIN"
     },
     {
       "matches": ["https://www.youtube.com/*"],
@@ -63,7 +56,7 @@
     "rule_resources": [
       {
         "id": "youtube_rules",
-        "enabled": true,
+        "enabled": false,
         "path": "rules/rules_1.json"
       }
     ]

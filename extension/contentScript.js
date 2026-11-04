@@ -53,38 +53,40 @@ function collectMatches(root, selector) {
 
 function removeStaticAds(root = document) {
   const scope = root ?? document;
-  AD_SELECTORS.forEach((selector) => {
-    collectMatches(scope, selector).forEach((node) => node.remove());
-  });
+  if (PlaybackSafety.isEnabled())
+    AD_SELECTORS.forEach((selector) => {
+      collectMatches(scope, selector).forEach((node) => {
+        if (
+          !node.querySelector(
+            "ytd-enforcement-message-view-model, ytd-enforcement-message-renderer"
+          )
+        )
+          node.remove();
+      });
+    });
 
-  pruneSponsoredRichItems(scope);
+  if (PlaybackSafety.isEnabled()) pruneSponsoredRichItems(scope);
   removeShortsShelves(scope);
   ensureSuperVolumeControls(scope);
   ensureLoopControls();
 }
 
 function scrubPlayerAds() {
-  const video = document.querySelector("video.html5-main-video");
-  const adOverlay = document.querySelector(".ytp-ad-player-overlay");
-  const adText = document.querySelector(".ytp-ad-text");
-  const skipButton = document.querySelector(".ytp-ad-skip-button.ytp-button");
-
-  if (skipButton) {
+  PlaybackSafety.check();
+  if (!PlaybackSafety.isEnabled()) return;
+  const player = document.getElementById("movie_player");
+  if (!player?.classList.contains("ad-showing")) return;
+  const skipButton = player.querySelector(
+    ".ytp-ad-skip-button, .ytp-ad-skip-button-modern, .ytp-skip-ad-button"
+  );
+  if (
+    skipButton &&
+    !skipButton.disabled &&
+    skipButton.getAttribute("aria-disabled") !== "true" &&
+    skipButton.getClientRects().length
+  )
     skipButton.click();
-  }
-
-  if (adOverlay) {
-    adOverlay.remove();
-  }
-
-  if (adText && /ad/i.test(adText.textContent ?? "")) {
-    adText.remove();
-  }
-
-  if (video && document.body.classList.contains("ad-showing")) {
-    video.currentTime = video.duration || video.currentTime;
-    document.body.classList.remove("ad-showing");
-  }
+  // Let YouTube own time, ad state and playback transitions, including live video.
 }
 
 function pruneSponsoredRichItems(root = document) {
@@ -522,6 +524,7 @@ function enhanceQualityMenuItems() {
 
 // Lightweight upsell blocker - called from debounced mutation batch, no separate observer/interval
 function blockUpsellElements() {
+  if (!PlaybackSafety.isEnabled()) return;
   const upsellSelectors = [
     "ytd-premium-upsell-renderer",
     "ytd-premium-upsell-dialog-renderer",
@@ -532,26 +535,6 @@ function blockUpsellElements() {
   upsellSelectors.forEach((selector) => {
     const elements = document.querySelectorAll(selector);
     elements.forEach((el) => el.remove());
-  });
-
-  // Remove dialogs that mention premium features
-  const dialogs = document.querySelectorAll("tp-yt-paper-dialog");
-  dialogs.forEach((dialog) => {
-    const text = dialog.textContent?.toLowerCase() || "";
-    if (
-      text.includes("enjoy enhanced quality") ||
-      (text.includes("premium") && text.includes("trial")) ||
-      (text.includes("youtube music") && text.includes("ad-free")) ||
-      (text.includes("iqd") && text.includes("month"))
-    ) {
-      dialog.remove();
-    }
-  });
-
-  // Remove backdrop/overlay when upsell is blocked
-  const backdrops = document.querySelectorAll("tp-yt-iron-overlay-backdrop");
-  backdrops.forEach((backdrop) => {
-    backdrop.remove();
   });
 }
 

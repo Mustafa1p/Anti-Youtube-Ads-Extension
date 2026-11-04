@@ -3,6 +3,7 @@
   "private": true,
   "scripts": {
     "test": "node scripts/test.cjs",
+    "test:browser": "node scripts/browser-smoke.cjs",
     "test:verify": "node scripts/verify-tests.cjs",
     "validate": "node scripts/validate.cjs",
     "format": "prettier --write .",
@@ -14,7 +15,7 @@
   "devDependencies": {
     "prettier": "3.8.2"
   },
-  "version": "2.3.0",
+  "version": "2.3.1",
   "description": "Desktop YouTube enhancements and Stranger Things cinematic effects.",
   "license": "MIT",
   "repository": {
