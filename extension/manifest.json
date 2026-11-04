@@ -2,7 +2,7 @@
   "manifest_version": 3,
   "name": "STRANGER THINGS EDITION",
   "description": "YouTube ad cleanup, optional SponsorBlock, playback tools, and Stranger Things effects for desktop browsers.",
-  "version": "2.3.1",
+  "version": "2.3.2",
   "permissions": [
     "declarativeNetRequest",
     "declarativeNetRequestFeedback",

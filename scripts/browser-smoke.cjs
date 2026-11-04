@@ -1,9 +1,24 @@
 // Optional integration check. Requires Playwright and its Chromium browser.
-const { chromium } = require(process.env.PLAYWRIGHT_MODULE || "playwright");
 const path = require("node:path");
 const fs = require("node:fs");
 const assert = require("node:assert/strict");
 (async () => {
+  const playwrightModule = process.env.PLAYWRIGHT_MODULE || "playwright";
+  let playwrightPath;
+  try {
+    playwrightPath = require.resolve(playwrightModule);
+  } catch (error) {
+    if (error.code !== "MODULE_NOT_FOUND") throw error;
+    throw new Error(
+      `Cannot load Playwright (${playwrightModule}). ` +
+        "Install it with: npm install --no-save playwright\n" +
+        "Then install Chromium with: npx playwright install chromium\n" +
+        "Run again with: npm run test:browser\n" +
+        "If using PLAYWRIGHT_MODULE, check that it points to an installed Playwright module.",
+      { cause: error }
+    );
+  }
+  const { chromium } = require(playwrightPath);
   const ext =
     process.env.EXTENSION_UNDER_TEST || path.resolve(__dirname, "../extension");
   fs.mkdirSync(path.resolve("output"), { recursive: true });
@@ -11,6 +26,7 @@ const assert = require("node:assert/strict");
     fs.mkdtempSync(path.resolve("output/iptube-smoke-")),
     {
       executablePath: process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE || undefined,
+      channel: "chromium",
       headless: true,
       args: [`--disable-extensions-except=${ext}`, `--load-extension=${ext}`]
     }
@@ -135,6 +151,7 @@ const assert = require("node:assert/strict");
       chrome.storage.local.get("adBlockingEnabled")
     );
     assert.equal(stored.adBlockingEnabled, false);
+    assert.deepEqual(errors, [], "Service worker console errors occurred");
     console.log(
       JSON.stringify({
         passed: true,
