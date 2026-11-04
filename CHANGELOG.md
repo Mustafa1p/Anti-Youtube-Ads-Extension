@@ -1,5 +1,13 @@
 # Changelog
 
+## 2.3.1 — 2026-11-04
+
+- Replace broad page API, visitor identity, integrity and enforcement patches with exact successful-player ad cleanup. Preserve native playback errors and verification UI.
+- Add persistent ad-blocking pause/resume and an explicit pause-and-reload button for recognized enforcement warnings. Restore owned page hooks when paused.
+- Remove automatic YouTube site-data deletion and the browsing-data permission.
+- Remove speculative stream/telemetry rules, scope ad-serving rules to YouTube initiators, and leave ad transitions to native skip controls.
+- Add behavioral regressions and source-backed research/maintenance notes.
+
 ## 2.3.0 — Unreleased
 
 ### Added

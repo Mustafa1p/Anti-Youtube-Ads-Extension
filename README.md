@@ -41,19 +41,19 @@ The buttons above download the repository and jump to these instructions. Chromi
 
 ## What you get
 
-| Feature                   | What it does                                                                                              | Default                             |
-| ------------------------- | --------------------------------------------------------------------------------------------------------- | ----------------------------------- |
-| Ad cleanup                | Declarative network rules, early response patching, and DOM cleanup remove matched ads and residual ad UI | On                                  |
-| SponsorBlock              | Skips selected community-marked segments; seven categories are available                                  | Off; sponsors selected when enabled |
-| Highest available quality | Requests the highest resolution exposed by YouTube's current player                                       | Off                                 |
-| Audio mode                | Hides the video picture while retaining sound and player controls                                         | Off                                 |
-| Sharper thumbnails        | Tries higher-resolution artwork and keeps the original when an upgrade is unavailable                     | Off                                 |
-| On-screen clock           | Shows your local time, including within the fullscreen player                                             | Off                                 |
-| Hide header logo          | Hides the themed header logo                                                                              | Off                                 |
-| Reduce theme motion       | Stops decorative theme animations                                                                         | Off                                 |
-| Cinematic effects         | Enables the special-video timeline and saved ambilight videos                                             | On                                  |
-| Playback extras           | Volume boost up to 500%, a loop button, and spatial audio simulation                                      | Available in the player             |
-| Cleaner browsing          | Shorts filtering, end-screen removal, and recommendation curation                                         | On                                  |
+| Feature                   | What it does                                                                          | Default                             |
+| ------------------------- | ------------------------------------------------------------------------------------- | ----------------------------------- |
+| Ad cleanup                | Scoped ad-serving rules, successful-player response cleanup, and native skip buttons  | On                                  |
+| SponsorBlock              | Skips selected community-marked segments; seven categories are available              | Off; sponsors selected when enabled |
+| Highest available quality | Requests the highest resolution exposed by YouTube's current player                   | Off                                 |
+| Audio mode                | Hides the video picture while retaining sound and player controls                     | Off                                 |
+| Sharper thumbnails        | Tries higher-resolution artwork and keeps the original when an upgrade is unavailable | Off                                 |
+| On-screen clock           | Shows your local time, including within the fullscreen player                         | Off                                 |
+| Hide header logo          | Hides the themed header logo                                                          | Off                                 |
+| Reduce theme motion       | Stops decorative theme animations                                                     | Off                                 |
+| Cinematic effects         | Enables the special-video timeline and saved ambilight videos                         | On                                  |
+| Playback extras           | Volume boost up to 500%, a loop button, and spatial audio simulation                  | Available in the player             |
+| Cleaner browsing          | Shorts filtering, end-screen removal, and recommendation curation                     | On                                  |
 
 Settings apply to open YouTube tabs. Quality selection uses YouTube's available streams and internal player methods: it cannot unlock Premium-only formats or create a resolution the video does not offer. Audio mode is a visual mode; it does **not** promise audio-only network traffic or reduced bandwidth. Spatial audio is an effect, not certified Dolby Atmos decoding.
 
@@ -88,6 +88,12 @@ Canvas sampling depends on browser access to video pixels. If the browser blocks
 
 _The screenshot shows highest quality and the clock enabled. Optional features are off on a fresh installation._
 
+## If YouTube blocks playback
+
+Open the extension popup, turn **YouTube ad blocking** off, then reload open YouTube tabs. The pause setting survives browser restarts; other features remain available. When a recognized YouTube enforcement warning appears, the page also offers **Pause ad blocking and reload**. Ads may play while paused. Other blockers can still interfere.
+
+This release removes broad identity/integrity spoofing, forced success states and automatic site-data deletion. It prioritizes recovery and playback reliability; it cannot guarantee permanent ad blocking or reverse server-side restrictions. See the [investigation, source links and verification limits](docs/youtube-playback-research.md).
+
 ## How the browser extension works
 
 ```mermaid
@@ -105,7 +111,7 @@ flowchart LR
     J --> K[MAIN-world player quality bridge]
 ```
 
-- **Before the page starts:** network rules block matching ad requests. MAIN-world scripts patch page APIs; the storage sanitizer removes matching detection markers.
+- **Before the page starts:** saved settings enable scoped ad-serving rules. Page cleanup waits for the stored mode, preserves identity and integrity data, and only prunes exact ad fields from successful player responses. YouTube storage is preserved.
 - **After the page is ready:** feature scripts attach controls, batch DOM cleanup, follow YouTube navigation, and apply local preferences.
 - **For segment skipping:** the service worker validates the video ID, checks the saved opt-in, queries SponsorBlock, filters its response, and caches results. The content script ignores stale navigation responses and merges overlapping skips.
 - **For quality:** a narrow message bridge passes a boolean preference into the page world, where the extension can access the player methods. It requests quality once per video/available-quality combination rather than continuously overriding your selection.
@@ -124,7 +130,7 @@ Preferences and ambilight video IDs are stored in `chrome.storage.local`. The ex
 
 **SponsorBlock is off by default.** When enabled, its service receives a four-character SHA-256 prefix of the current video ID and the selected categories. The response contains a bucket of candidate videos, which is filtered locally. No cookies or account credentials are included, but the service can see your IP address; a short hash prefix is not a guarantee of anonymity.
 
-YouTube host access supports page integration and network rules. The SponsorBlock host permission allows the service worker's optional API request. Storage saves settings and counters. The existing browsing-data permission clears YouTube cache/site storage on install or update while preserving cookies; some local YouTube preferences may reset. The network-debug permission supports request-count diagnostics in unpacked development builds. Unused scripting and active-tab permissions have been removed.
+YouTube host access supports page integration and network rules. The SponsorBlock host permission allows the service worker's optional API request. Storage saves settings and counters. The extension does not clear YouTube cookies, site storage, IndexedDB, or service workers, and no longer requests the browsing-data permission. The network-debug permission supports request-count diagnostics in unpacked development builds. Unused scripting and active-tab permissions have been removed.
 
 ## Contributing
 
@@ -142,17 +148,17 @@ npm run package
 
 The package is written to `dist/iptube-browser-extension.zip`. Extract it and load its `extension` directory. Packaging uses a runtime file list derived from the manifest, popup dependencies, and service-worker imports. Browser-generated metadata, development helpers, and unrelated files are excluded. GitHub Actions runs tests and attaches the ZIP as a build artifact; downloading Actions artifacts requires GitHub access.
 
-| File                                                 | Responsibility                                      |
-| ---------------------------------------------------- | --------------------------------------------------- |
-| `extension/manifest.json`                            | Permissions, script order, page worlds, and assets  |
-| `background.js`, `sponsorBlockService.js`            | Counters and optional segment lookup                |
-| `featureSettings.js`, `videoSettings.js`             | Typed settings, video validation, and persistence   |
-| `earlyPatch.js`, `antiBot.js`, `storageSanitizer.js` | Early page hooks and storage handling               |
-| `contentScript.js`, `contentConfig.js`               | Startup, ad cleanup, selectors, and DOM observation |
-| `sidebar.js`, `mediaControls.js`, `branding.js`      | Recommendation filtering, media tools, and branding |
-| `browserFeatures.js`, `playerQuality.js`             | Desktop enhancements and quality bridge             |
-| `backgroundRandomizer.js`, `style.css`               | Backgrounds, timeline, and ambilight                |
-| `popup.html`, `popup.css`, `popup.js`                | Settings interface                                  |
+| File                                                         | Responsibility                                          |
+| ------------------------------------------------------------ | ------------------------------------------------------- |
+| `extension/manifest.json`                                    | Permissions, script order, page worlds, and assets      |
+| `background.js`, `sponsorBlockService.js`                    | Counters and optional segment lookup                    |
+| `featureSettings.js`, `videoSettings.js`                     | Typed settings, video validation, and persistence       |
+| `earlyPatch.js`, `playbackSafety.js`, `adBlockingService.js` | Scoped player cleanup, saved blocking mode and recovery |
+| `contentScript.js`, `contentConfig.js`                       | Startup, ad cleanup, selectors, and DOM observation     |
+| `sidebar.js`, `mediaControls.js`, `branding.js`              | Recommendation filtering, media tools, and branding     |
+| `browserFeatures.js`, `playerQuality.js`                     | Desktop enhancements and quality bridge                 |
+| `backgroundRandomizer.js`, `style.css`                       | Backgrounds, timeline, and ambilight                    |
+| `popup.html`, `popup.css`, `popup.js`                        | Settings interface                                      |
 
 Paths in the table are inside `extension/`. Classic content scripts share an isolated-world scope and must retain the manifest loading order. MAIN-world scripts cannot directly access extension storage.
 

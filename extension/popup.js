@@ -5,6 +5,33 @@ document.addEventListener("DOMContentLoaded", () => {
   const statusMessage = document.getElementById("statusMsg");
   let statusTimeout;
   let pendingUpdate = Promise.resolve();
+  const adBlockingInput = document.getElementById("adBlockingEnabled");
+  chrome.storage.local
+    .get(["adBlockingEnabled"])
+    .then((saved) => {
+      adBlockingInput.checked = saved.adBlockingEnabled !== false;
+      adBlockingInput.disabled = false;
+    })
+    .catch(() =>
+      showStatus("Could not load ad blocking settings. Reopen the popup.")
+    );
+  adBlockingInput.addEventListener("change", async () => {
+    const enabled = adBlockingInput.checked;
+    adBlockingInput.disabled = true;
+    try {
+      const result = await chrome.runtime.sendMessage({
+        type: "SET_AD_BLOCKING",
+        enabled
+      });
+      if (!result?.ok) throw new Error("Could not change blocking");
+      showStatus("Saved. Reload open YouTube tabs to finish applying.");
+    } catch {
+      adBlockingInput.checked = !enabled;
+      showStatus("Could not save ad blocking settings. Try again.");
+    } finally {
+      adBlockingInput.disabled = false;
+    }
+  });
   const featureInputs = new Map();
   const categoryInputs = new Map();
   const featureDefinitions = [

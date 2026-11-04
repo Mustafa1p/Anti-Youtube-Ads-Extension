@@ -1,4 +1,8 @@
-importScripts("featureSettings.js", "sponsorBlockService.js");
+importScripts(
+  "featureSettings.js",
+  "sponsorBlockService.js",
+  "adBlockingService.js"
+);
 
 const STORAGE_KEY = "blockedRequestCount";
 let pendingCountOperation = Promise.resolve();
@@ -38,46 +42,10 @@ function incrementBlockedCount() {
   });
 }
 
-chrome.runtime.onInstalled.addListener(async (details) => {
+chrome.runtime.onInstalled.addListener(async () => {
   await enqueueCountOperation(() => writeCount(0));
-  console.info("[CTF-Blocker] Ready to block YouTube ads.");
-
-  // On install/update, clear only detection-related data (preserve auth)
-  if (details.reason === "install" || details.reason === "update") {
-    try {
-      // Clear cache and non-auth storage only
-      await chrome.browsingData.remove(
-        {
-          origins: [
-            "https://www.youtube.com",
-            "https://youtube.com",
-            "https://m.youtube.com"
-          ]
-        },
-        {
-          appcache: true,
-          cache: true,
-          cacheStorage: true,
-          cookies: false, // Don't clear cookies - handled selectively by storageSanitizer
-          downloads: false,
-          fileSystems: true,
-          formData: false, // Preserve form data
-          history: false,
-          indexedDB: true,
-          localStorage: true,
-          passwords: false,
-          pluginData: true,
-          serviceWorkers: true,
-          webSQL: true
-        }
-      );
-      console.info(
-        "[CTF-Blocker] Cleared YouTube cache/storage (auth preserved)"
-      );
-    } catch (error) {
-      console.warn("[CTF-Blocker] Could not clear storage:", error);
-    }
-  }
+  await AdBlockingService.sync().catch(console.error);
+  console.info("[CTF-Blocker] Ready. YouTube site data preserved.");
 });
 
 if (chrome.declarativeNetRequest?.onRuleMatchedDebug) {
@@ -89,6 +57,25 @@ if (chrome.declarativeNetRequest?.onRuleMatchedDebug) {
 }
 
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+  if (message?.type === "SET_AD_BLOCKING") {
+    const extensionPage =
+      sender.id === chrome.runtime.id &&
+      sender.url?.startsWith(chrome.runtime.getURL(""));
+    const youtubePage =
+      sender.id === chrome.runtime.id &&
+      sender.tab &&
+      /^https:\/\/www\.youtube\.com\//.test(sender.url || "");
+    if (
+      (!extensionPage && !youtubePage) ||
+      typeof message.enabled !== "boolean"
+    )
+      return false;
+    AdBlockingService.setEnabled(message.enabled)
+      .then(() => sendResponse({ ok: true }))
+      .catch(() => sendResponse({ ok: false }));
+    return true;
+  }
+
   if (message?.type === "GET_SPONSOR_SEGMENTS") {
     if (!sender.tab || !/^https:\/\/www\.youtube\.com\//.test(sender.url || ""))
       return false;
