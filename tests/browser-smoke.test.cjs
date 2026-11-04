@@ -4,15 +4,18 @@ const fs = require("node:fs");
 const path = require("node:path");
 const vm = require("node:vm");
 const { spawnSync } = require("node:child_process");
+const { randomUUID } = require("node:crypto");
 
 const script = path.resolve(__dirname, "../scripts/browser-smoke.cjs");
 const source = fs.readFileSync(script, "utf8");
 
 // Exercise the complete script with browser responses, without requiring Chromium.
-async function runSmoke(workerError) {
+async function runSmoke(workerError, executablePath) {
   const logs = [];
   const failures = [];
-  const processState = { env: {} };
+  const processState = {
+    env: { PLAYWRIGHT_CHROMIUM_EXECUTABLE: executablePath }
+  };
   let sandbox;
   const inBrowserRealm = (value) =>
     value === undefined
@@ -72,7 +75,11 @@ async function runSmoke(workerError) {
       return {
         chromium: {
           launchPersistentContext: async (_, options) => {
-            assert.equal(options.channel, "chromium");
+            assert.equal(
+              options.channel,
+              executablePath ? undefined : "chromium"
+            );
+            assert.equal(options.executablePath, executablePath);
             return context;
           }
         }
@@ -120,12 +127,19 @@ test("browser smoke fails and closes the browser when a worker logs an error", a
   assert.equal(result.closed, true);
 });
 
+test("browser smoke respects an explicit Chromium executable without forcing a channel", async () => {
+  const result = await runSmoke(undefined, "/external/chromium");
+  assert.equal(result.exitCode, undefined);
+  assert.equal(result.logs[0].passed, true);
+  assert.equal(result.closed, true);
+});
+
 test("missing Playwright exits unsuccessfully with installation and override guidance", () => {
   const result = spawnSync(process.execPath, [script], {
     encoding: "utf8",
     env: {
       ...process.env,
-      PLAYWRIGHT_MODULE: path.join(__dirname, "missing-playwright.cjs")
+      PLAYWRIGHT_MODULE: `iptube-missing-playwright-${randomUUID()}`
     }
   });
   assert.ifError(result.error);

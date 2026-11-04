@@ -26,7 +26,9 @@ const assert = require("node:assert/strict");
     fs.mkdtempSync(path.resolve("output/iptube-smoke-")),
     {
       executablePath: process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE || undefined,
-      channel: "chromium",
+      channel: process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE
+        ? undefined
+        : "chromium",
       headless: true,
       args: [`--disable-extensions-except=${ext}`, `--load-extension=${ext}`]
     }
