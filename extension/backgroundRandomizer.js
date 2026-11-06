@@ -44,45 +44,8 @@
   }
 
   function injectStrangerThingsLogo() {
-    try {
-      const logoRenderer = document.querySelector("ytd-topbar-logo-renderer");
-      if (logoRenderer && !document.getElementById("st-custom-logo")) {
-        const wrapper = document.createElement("div");
-        wrapper.id = "st-custom-logo";
-
-        const title = document.createElement("a"); // Make it a link
-        title.className = "st-logo-title";
-        title.innerText = "STRANGER THINGS";
-        title.href = "/";
-        title.style.textDecoration = "none"; // No underline
-
-        const subtitle = document.createElement("a");
-        subtitle.className = "st-logo-subtitle";
-        subtitle.innerText = "Created by IP | V2.3.2";
-        subtitle.href = "https://instagram.com/tofa";
-        subtitle.target = "_blank";
-        subtitle.rel = "noopener noreferrer";
-
-        wrapper.appendChild(title);
-        wrapper.appendChild(subtitle);
-
-        logoRenderer.appendChild(wrapper);
-      }
-    } catch (e) {
-      console.warn("[Stranger Things] Logo injection error", e);
-    }
+    ThemeController.refreshBranding();
   }
-
-  // Re-run injection periodically to handle YouTube's dynamic re-rendering.
-  // Once successfully injected, the interval clears itself to avoid wasted DOM queries.
-  let _logoIntervalId = setInterval(() => {
-    injectStrangerThingsLogo();
-    if (document.getElementById("st-custom-logo")) {
-      clearInterval(_logoIntervalId);
-      _logoIntervalId = null;
-    }
-  }, 5000);
-  injectStrangerThingsLogo();
 
   /* --- THE VEKNA CLOCK (Easter Egg Timeline) --- */
   const TARGET_VIDEO_ID = "SkcO47UDzzY";
@@ -111,7 +74,11 @@
   let ambilightCanvas, ambilightCtx, ambilightLoopId;
 
   function checkTimeForDoom() {
-    if (!BrowserFeatures.getSettings().cinematicEffects || document.hidden) {
+    if (
+      ThemeController.getTheme() !== "stranger-things" ||
+      !BrowserFeatures.getSettings().cinematicEffects ||
+      document.hidden
+    ) {
       if (currentPhase !== "normal") resetReality();
       if (ambilightActive) stopAmbilight();
       return;
@@ -350,6 +317,11 @@
     );
     removeOverlays();
   }
+
+  document.addEventListener("iptube-theme-changed", () => {
+    resetReality();
+    if (ambilightActive) stopAmbilight();
+  });
 
   // Monitor time every 500ms (reduced from 250ms - still responsive but halves CPU load)
   setInterval(checkTimeForDoom, 500);

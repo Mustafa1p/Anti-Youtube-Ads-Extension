@@ -1,18 +1,20 @@
 {
   "manifest_version": 3,
-  "name": "STRANGER THINGS EDITION",
-  "description": "YouTube ad cleanup, optional SponsorBlock, playback tools, and Stranger Things effects for desktop browsers.",
-  "version": "2.3.2",
+  "name": "IPTUBE · Theme Studio",
+  "description": "YouTube ad cleanup, optional SponsorBlock, playback tools, and nine movie and gaming themes with live switching.",
+  "version": "2.4.0",
   "permissions": [
     "declarativeNetRequest",
     "declarativeNetRequestFeedback",
-    "storage"
+    "storage",
+    "alarms"
   ],
   "host_permissions": [
     "https://www.youtube.com/*",
     "https://*.youtube.com/*",
     "https://*.googlevideo.com/*",
-    "https://sponsorblock.inf.re/*"
+    "https://sponsorblock.inf.re/*",
+    "https://api.github.com/*"
   ],
   "background": {
     "service_worker": "background.js"
@@ -38,6 +40,7 @@
     {
       "matches": ["https://www.youtube.com/*"],
       "js": [
+        "themeSettings.js",
         "featureSettings.js",
         "contentConfig.js",
         "sidebar.js",
@@ -45,10 +48,11 @@
         "branding.js",
         "videoSettings.js",
         "browserFeatures.js",
+        "themeController.js",
         "contentScript.js",
         "backgroundRandomizer.js"
       ],
-      "css": ["style.css", "browserFeatures.css"],
+      "css": ["style.css", "themes.css", "browserFeatures.css"],
       "run_at": "document_idle"
     }
   ],
@@ -71,13 +75,20 @@
         "background/4.svg",
         "background/5.svg",
         "background/6.svg",
-        "background/7.svg"
+        "background/7.svg",
+        "themes/breaking-bad.svg",
+        "themes/game-of-thrones.png",
+        "themes/gta-vi.png",
+        "themes/modern-warfare.png",
+        "themes/netflix.png",
+        "themes/ps5.png",
+        "themes/xbox.png"
       ],
       "matches": ["https://www.youtube.com/*"]
     }
   ],
   "action": {
-    "default_title": "STRANGER THINGS EDITION",
+    "default_title": "IPTUBE · Theme Studio",
     "default_popup": "popup.html"
   }
 }

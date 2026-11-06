@@ -4,3 +4,5 @@ output/
 .playwright-cli/
 extension/_metadata/
 package-lock.json
+# Preserve third-party logo source bytes.
+extension/themes/

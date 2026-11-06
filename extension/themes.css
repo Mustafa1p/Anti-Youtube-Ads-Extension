@@ -1,0 +1,339 @@
+/* Original deliberately matches none of these rules. Native branding is never destroyed. */
+@scope (html[data-iptube-theme]:not([data-iptube-theme="original"])) {
+  :scope,
+  ytd-app,
+  ytd-masthead,
+  ytd-popup-container {
+    color-scheme: dark;
+    --yt-spec-base-background: var(--ipt-bg) !important;
+    --yt-spec-raised-background: var(--ipt-surface) !important;
+    --yt-spec-menu-background: var(--ipt-raised) !important;
+    --yt-spec-inverted-background: var(--ipt-accent) !important;
+    --yt-spec-text-primary: var(--ipt-text) !important;
+    --yt-spec-text-secondary: var(--ipt-muted) !important;
+    --yt-spec-text-primary-inverse: var(--ipt-on-accent) !important;
+    --yt-spec-icon-inactive: var(--ipt-muted) !important;
+    --yt-spec-icon-active-other: var(--ipt-accent) !important;
+    --yt-spec-call-to-action: var(--ipt-accent) !important;
+    --yt-spec-brand-button-background: var(--ipt-accent) !important;
+    --yt-spec-static-brand-red: var(--ipt-accent) !important;
+    --yt-spec-brand-icon-active: var(--ipt-accent) !important;
+    --yt-spec-badge-chip-background: var(--ipt-raised) !important;
+    --yt-spec-10-percent-layer: color-mix(
+      in srgb,
+      var(--ipt-accent) 12%,
+      transparent
+    ) !important;
+    --yt-spec-outline: var(--ipt-border) !important;
+    --ytd-searchbox-background: var(--ipt-surface) !important;
+    --ytd-searchbox-text-color: var(--ipt-text) !important;
+    --ytd-searchbox-border-color: var(--ipt-border) !important;
+    --ytd-searchbox-legacy-border-color: var(--ipt-border) !important;
+    --ytd-searchbox-legacy-button-color: var(--ipt-raised) !important;
+  }
+  body {
+    background: var(--ipt-bg) !important;
+    color: var(--ipt-text) !important;
+  }
+  ytd-app {
+    background: var(--ipt-atmosphere, none), var(--ipt-bg) !important;
+  }
+  #masthead-container,
+  ytd-masthead {
+    background: var(--ipt-surface) !important;
+    border-bottom: 1px solid var(--ipt-border) !important;
+  }
+  #masthead-container::after {
+    content: "";
+    position: absolute;
+    inset: auto 0 0;
+    height: 2px;
+    background: linear-gradient(
+      90deg,
+      var(--ipt-accent),
+      var(--ipt-secondary),
+      var(--ipt-accent)
+    );
+    pointer-events: none;
+  }
+  ytd-topbar-logo-renderer #logo,
+  ytd-topbar-logo-renderer #country-code {
+    display: none !important;
+  }
+  #iptube-theme-logo {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 148px;
+    height: 46px;
+    margin-inline: 8px;
+    color: var(--ipt-accent);
+    text-decoration: none;
+    font: 800 20px/0.95 var(--ipt-display);
+    text-align: center;
+  }
+  #iptube-theme-logo img {
+    max-width: 140px;
+    max-height: 40px;
+    object-fit: contain;
+  }
+  #iptube-theme-logo:focus-visible {
+    outline: 2px solid var(--ipt-accent);
+    outline-offset: 3px;
+  }
+  #guide-content,
+  ytd-mini-guide-renderer,
+  ytd-multi-page-menu-renderer,
+  tp-yt-paper-dialog,
+  ytd-menu-popup-renderer,
+  yt-confirm-dialog-renderer,
+  #chips-wrapper,
+  #description.ytd-watch-metadata {
+    background: var(--ipt-surface) !important;
+    color: var(--ipt-text) !important;
+    border-color: var(--ipt-border) !important;
+  }
+  ytd-searchbox-form,
+  #container.ytd-searchbox,
+  yt-searchbox #container,
+  yt-searchbox .ytSearchboxComponentInputBox {
+    background: var(--ipt-surface) !important;
+    border: 1px solid var(--ipt-border) !important;
+    border-radius: var(--ipt-radius) !important;
+    box-shadow: none !important;
+  }
+  input#search {
+    color: var(--ipt-text) !important;
+    font-family: Roboto, Arial, sans-serif !important;
+    text-shadow: none !important;
+  }
+  #search-icon-legacy,
+  yt-searchbox button {
+    background: var(--ipt-raised) !important;
+    border-color: var(--ipt-border) !important;
+    color: var(--ipt-text) !important;
+  }
+  yt-chip-cloud-chip-renderer,
+  yt-chip-cloud-chip-renderer #chip-container,
+  .yt-spec-button-shape-next--tonal,
+  .yt-spec-button-shape-next--outline {
+    background: var(--ipt-raised) !important;
+    color: var(--ipt-text) !important;
+    border-color: var(--ipt-border) !important;
+    border-radius: var(--ipt-radius) !important;
+  }
+  yt-chip-cloud-chip-renderer[selected],
+  yt-chip-cloud-chip-renderer[selected] #chip-container,
+  .yt-spec-button-shape-next--filled,
+  .yt-spec-button-shape-next--mono.yt-spec-button-shape-next--filled {
+    background: var(--ipt-accent) !important;
+    color: var(--ipt-on-accent) !important;
+    border-radius: var(--ipt-radius) !important;
+  }
+  ytd-guide-entry-renderer[active],
+  ytd-guide-entry-renderer:hover,
+  ytd-mini-guide-entry-renderer:hover,
+  .ytp-menuitem:hover {
+    background: var(--ipt-raised) !important;
+    box-shadow: inset 3px 0 var(--ipt-accent);
+  }
+  #video-title,
+  h1.ytd-watch-metadata,
+  #channel-name {
+    color: var(--ipt-text) !important;
+  }
+  h1.ytd-watch-metadata {
+    font-family: var(--ipt-display) !important;
+  }
+  ytd-rich-grid-media,
+  ytd-compact-video-renderer,
+  yt-lockup-view-model {
+    border-radius: var(--ipt-radius) !important;
+  }
+  ytd-rich-grid-media:hover,
+  ytd-compact-video-renderer:hover,
+  yt-lockup-view-model:hover {
+    background: color-mix(
+      in srgb,
+      var(--ipt-accent) 7%,
+      var(--ipt-bg)
+    ) !important;
+  }
+  ytd-thumbnail,
+  ytd-thumbnail img,
+  yt-thumbnail-view-model,
+  .ytThumbnailViewModelImage {
+    border-radius: var(--ipt-radius) !important;
+  }
+  .ytp-play-progress,
+  .ytp-scrubber-button,
+  .ytp-volume-slider-handle,
+  .ytp-volume-slider-handle::before,
+  .ytp-swatch-background-color,
+  yt-page-navigation-progress #progress,
+  #progress.yt-page-navigation-progress,
+  #progress.ytd-thumbnail-overlay-resume-playback-renderer {
+    background: var(--ipt-accent) !important;
+    box-shadow: 0 0 8px color-mix(in srgb, var(--ipt-accent) 35%, transparent) !important;
+  }
+  .ytp-load-progress {
+    background: color-mix(
+      in srgb,
+      var(--ipt-secondary) 40%,
+      transparent
+    ) !important;
+  }
+  .ytp-spinner-left,
+  .ytp-spinner-right {
+    border-color: var(--ipt-accent) !important;
+  }
+  .ytp-settings-menu,
+  .ytp-popup {
+    background: var(--ipt-surface) !important;
+    color: var(--ipt-text) !important;
+    border: 1px solid var(--ipt-border);
+  }
+  .ytp-menuitem[aria-checked="true"] .ytp-menuitem-toggle-checkbox {
+    background: var(--ipt-accent) !important;
+  }
+  .ytp-button:focus-visible,
+  button:focus-visible,
+  a:focus-visible,
+  input:focus-visible {
+    outline-color: var(--ipt-accent) !important;
+  }
+
+  /* Current YouTube generated component names, alongside legacy Polymer selectors. */
+  .ytSearchboxComponentInput {
+    color: var(--ipt-text) !important;
+    caret-color: var(--ipt-accent);
+  }
+  .ytSearchboxComponentInput::placeholder {
+    color: var(--ipt-muted) !important;
+  }
+  .ytSearchboxComponentSuggestionsContainer,
+  .ytSearchboxComponentSuggestionsContainer > *,
+  ytd-feed-nudge-renderer #content-wrapper,
+  .ytDialogViewModelHost {
+    background: var(--ipt-surface) !important;
+    color: var(--ipt-text) !important;
+    border-color: var(--ipt-border) !important;
+  }
+  ytd-feed-nudge-renderer #title,
+  ytd-feed-nudge-renderer #subtitle {
+    color: var(--ipt-text) !important;
+  }
+  .ytSpecButtonShapeNextHost {
+    border-radius: var(--ipt-radius) !important;
+  }
+  .ytSpecButtonShapeNextTonal,
+  .ytSpecButtonShapeNextOutline,
+  .ytChipShapeInactive {
+    background: var(--ipt-raised) !important;
+    color: var(--ipt-text) !important;
+    border-color: var(--ipt-border) !important;
+  }
+  .ytSpecButtonShapeNextText {
+    color: var(--ipt-text) !important;
+  }
+  .ytSpecButtonShapeNextCallToAction {
+    color: var(--ipt-accent) !important;
+  }
+  .ytSpecButtonShapeNextFilled,
+  .ytChipShapeActive {
+    background: var(--ipt-accent) !important;
+    color: var(--ipt-on-accent) !important;
+  }
+  .ytChipShapeChip {
+    border-radius: var(--ipt-radius) !important;
+  }
+  .ytSearchboxComponentSearchButton,
+  .ytSearchboxComponentClearButton {
+    border-radius: var(--ipt-radius) !important;
+  }
+  .ytSearchboxComponentClearButton {
+    background: transparent !important;
+  }
+  .yt-spec-button-shape-next--filled yt-icon,
+  .ytSpecButtonShapeNextFilled .ytIconWrapperHost {
+    color: var(--ipt-on-accent) !important;
+  }
+  ::selection {
+    background: var(--ipt-accent);
+    color: var(--ipt-on-accent);
+  }
+  * {
+    scrollbar-color: var(--ipt-border) var(--ipt-bg);
+  }
+  #iptube-clock,
+  #iptube-feature-toast {
+    background: var(--ipt-surface);
+    border-color: var(--ipt-border);
+    color: var(--ipt-text);
+  }
+}
+/* Each world has a distinct atmosphere, typography and geometry. */
+html[data-iptube-theme="breaking-bad"] {
+  --ipt-atmosphere:
+    radial-gradient(ellipse at 85% 0%, #36572b40, transparent 55%),
+    repeating-linear-gradient(0deg, transparent 0 63px, #83c36a05 63px 64px),
+    repeating-linear-gradient(90deg, transparent 0 63px, #83c36a05 63px 64px);
+}
+html[data-iptube-theme="game-of-thrones"] {
+  --ipt-atmosphere:
+    radial-gradient(ellipse at 50% 0%, #7ca6c72b, transparent 65%),
+    linear-gradient(120deg, #080f19, #17273955, #080f19);
+}
+html[data-iptube-theme="gta-vi"] {
+  --ipt-atmosphere:
+    radial-gradient(ellipse at 0% 0%, #f36caa30, transparent 48%),
+    radial-gradient(ellipse at 100% 65%, #3bddd923, transparent 55%);
+}
+html[data-iptube-theme="modern-warfare"] {
+  --ipt-atmosphere:
+    repeating-linear-gradient(135deg, #9ba99406 0 1px, transparent 1px 12px),
+    radial-gradient(ellipse at 100% 0%, #b6a44a18, transparent 55%);
+}
+html[data-iptube-theme="xbox"] {
+  --ipt-atmosphere: radial-gradient(
+    ellipse at 50% 0%,
+    #5ac51b30,
+    transparent 60%
+  );
+}
+html[data-iptube-theme="ps5"] {
+  --ipt-atmosphere:
+    radial-gradient(ellipse at 0% 20%, #1674ec30, transparent 55%),
+    radial-gradient(ellipse at 100% 0%, #b9deff18, transparent 50%);
+}
+html[data-iptube-theme="netflix"] {
+  --ipt-atmosphere: linear-gradient(180deg, #34080e80, transparent 360px);
+}
+html[data-iptube-theme="stranger-things"] #iptube-theme-logo {
+  color: #ff3049;
+  font-family: Georgia, serif;
+  letter-spacing: -1px;
+  text-shadow: 0 0 12px #e5091480;
+  border-block: 1px solid #8a2031;
+}
+html[data-iptube-theme="ps5"] #iptube-theme-logo img {
+  filter: brightness(0) invert(1);
+}
+html[data-iptube-theme="game-of-thrones"] #iptube-theme-logo img {
+  filter: invert(1) grayscale(1) brightness(1.7);
+}
+html[data-iptube-theme="netflix"] #iptube-theme-logo img {
+  max-height: 38px;
+}
+@media (prefers-reduced-motion: reduce) {
+  html[data-iptube-theme] body::before,
+  html[data-iptube-theme] body::after,
+  html[data-iptube-theme] #masthead-container::after,
+  html[data-iptube-theme] [class^="st-"] {
+    animation: none !important;
+    transition: none !important;
+  }
+}
+html.iptube-reduce-motion #masthead-container::after {
+  animation: none !important;
+}

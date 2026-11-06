@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>IPTUBE · Stranger Things Edition</title>
+    <title>IPTUBE &middot; Theme Studio</title>
     <link rel="stylesheet" href="popup.css" />
   </head>
   <body>
@@ -11,18 +11,72 @@
       <header class="hero">
         <div class="eyebrow">
           <span class="live-dot"></span> IPTUBE / BROWSER EDITION
-          <span class="version">V2.3.2</span>
+          <span class="version" id="installedVersion">V2.4.0</span>
         </div>
-        <h1>STRANGER<br /><span>THINGS</span></h1>
-        <p>Your screen. A different dimension.</p>
+        <h1>THEME STUDIO<span>Make YouTube yours.</span></h1>
+        <p>Nine worlds. One screen.</p>
         <a
           class="demo-link"
           href="https://www.youtube.com/watch?v=SkcO47UDzzY&amp;list=RDSkcO47UDzzY&amp;start_radio=1"
           target="_blank"
           rel="noopener noreferrer"
-          >▶ Enter the Upside Down <span>DEMO</span></a
+          >&#9654; Enter the Upside Down <span>DEMO</span></a
         >
       </header>
+      <section class="update-section" aria-labelledby="updatesTitle">
+        <div class="section-heading">
+          <h2 id="updatesTitle">GITHUB UPDATES</h2>
+          <span>AUTO CHECK · EVERY 6H</span>
+        </div>
+        <p id="updateStatus" role="status" aria-live="polite">
+          Checking for updates…
+        </p>
+        <div class="update-actions">
+          <button id="checkUpdates" type="button">Check for updates</button>
+          <a
+            id="downloadUpdate"
+            hidden
+            target="_blank"
+            rel="noopener noreferrer"
+            >Download update</a
+          >
+        </div>
+        <details id="updateInstructions">
+          <summary>How to install an update</summary>
+          <ol>
+            <li>Download and extract the release ZIP.</li>
+            <li>
+              Replace the contents of your existing extension folder with the
+              new <strong>extension</strong> folder's contents. Keep the same
+              folder location.
+            </li>
+            <li>
+              Open your browser's Extensions page and click
+              <strong>Reload</strong> on IPTUBE. Refresh YouTube.
+            </li>
+          </ol>
+          <p>
+            Your saved settings stay in place. Do not remove the extension.
+            Chrome requires this manual step for unpacked extensions.
+          </p>
+        </details>
+      </section>
+      <section class="themes-section" aria-labelledby="themesTitle">
+        <div class="section-heading">
+          <h2 id="themesTitle">CHOOSE YOUR WORLD</h2>
+          <span>9 THEMES</span>
+        </div>
+        <div
+          id="themeGrid"
+          class="theme-grid"
+          role="group"
+          aria-label="YouTube themes"
+          aria-describedby="themeHint"
+        ></div>
+        <p id="themeHint" class="theme-hint" role="status">
+          Loading your theme…
+        </p>
+      </section>
       <section aria-labelledby="featuresTitle">
         <div class="section-heading">
           <h2 id="featuresTitle">PLAYBACK &amp; ATMOSPHERE</h2>
@@ -80,11 +134,14 @@
       </section>
       <div class="status-msg" id="statusMsg" role="status"></div>
       <footer>
-        <span>CREATED BY IP</span><span>DESKTOP YOUTUBE · MV3</span>
+        <span>CREATED BY IP</span><span>DESKTOP YOUTUBE &middot; MV3</span>
       </footer>
     </main>
     <script src="featureSettings.js"></script>
     <script src="videoSettings.js"></script>
+    <script src="themeSettings.js"></script>
+    <script src="themePicker.js"></script>
+    <script src="updatePopup.js"></script>
     <script src="popup.js"></script>
   </body>
 </html>

@@ -1,12 +1,12 @@
 <div align="center">
 
-# IPTUBE · Stranger Things Edition
+# IPTUBE · Theme Studio
 
 **A different dimension for desktop YouTube.**
 
-Ad cleanup, optional SponsorBlock, playback tools, and a cinematic theme that follows the music.
+Ad cleanup, optional SponsorBlock, playback tools, and nine selectable movie and gaming themes.
 
-[![Download ZIP](https://img.shields.io/badge/⬇_Download-ZIP-e52b48?style=for-the-badge)](https://github.com/Mustafa1p/Anti-Youtube-Ads-Extension-/archive/refs/heads/main.zip)
+[![Download ZIP](https://img.shields.io/badge/⬇_Download-ZIP-e52b48?style=for-the-badge)](https://github.com/Mustafa1p/Anti-Youtube-Ads-Extension/releases/latest/download/iptube-browser-extension.zip)
 [![Quick install](https://img.shields.io/badge/⚡_Quick-Install-24212b?style=for-the-badge)](#quick-install)
 [![Watch the demo](https://img.shields.io/badge/▶_Enter-The_Upside_Down-a81d35?style=for-the-badge)](https://www.youtube.com/watch?v=SkcO47UDzzY&list=RDSkcO47UDzzY&start_radio=1)
 
@@ -22,7 +22,7 @@ _Actual Chromium capture with the unpacked extension loaded. Burning mode is act
 
 ## Quick install
 
-1. **[Download the ZIP](https://github.com/Mustafa1p/Anti-Youtube-Ads-Extension-/archive/refs/heads/main.zip)** and extract it.
+1. **[Download the ZIP](https://github.com/Mustafa1p/Anti-Youtube-Ads-Extension/releases/latest/download/iptube-browser-extension.zip)** and extract it.
 2. Open your browser's extensions manager:
 
    | Browser | Paste into the address bar |
@@ -35,9 +35,31 @@ _Actual Chromium capture with the unpacked extension loaded. Burning mode is act
 4. Choose **Load unpacked** and select the extracted **`extension`** folder containing `manifest.json`.
 5. Refresh any open YouTube tabs, then pin the extension to open its settings.
 
-The buttons above download the repository and jump to these instructions. Chromium requires you to confirm installation in its extensions manager; a README cannot silently install an extension. The download contains the version currently published on `main`.
+The buttons above download the repository and jump to these instructions. Chromium requires you to confirm installation in its extensions manager; a README cannot silently install an extension. The download contains the latest published stable release.
 
 **Updating:** replace your local files, click **Reload** on the extension card, then refresh YouTube. This project targets `https://www.youtube.com/` in desktop Chromium browsers. It does not provide a Firefox build, mobile app, or TV installation package.
+
+## Updates from GitHub
+
+Version 2.4.0 and later automatically check the latest stable GitHub Release every six hours while the browser is running, and check when you open the popup (using the same six-hour cache). The toolbar displays **NEW** when a newer packaged release exists. Use **Check for updates** to check immediately, then **Download v…** to download its ZIP. Only published stable releases containing `iptube-browser-extension.zip` are offered; prereleases and incomplete releases are ignored. Offline checks keep the previously discovered update available.
+
+For an unpacked installation, extract the ZIP and replace the contents of your existing extension folder with the new `extension` folder's contents. Keep the same installation path, click **Reload** on the extension in your browser's Extensions page, and refresh YouTube. Saved settings remain in place. Do not remove and reinstall the extension.
+
+This detects and downloads updates; it cannot silently replace an unpacked extension's files. Chrome requires a Web Store or managed deployment for automatic installation ([Chrome distribution documentation](https://developer.chrome.com/docs/extensions/how-to/distribute)). Users on older releases must install 2.4.0 once to receive future update checks. The updater requests only public release metadata from `api.github.com`, without cookies or an account token. GitHub sees the request's IP address; no video IDs, theme preferences, or browsing history are included. Downloading a release opens GitHub in your browser normally. No remote JavaScript is executed.
+
+Source archive fallback: [download main](https://github.com/Mustafa1p/Anti-Youtube-Ads-Extension/archive/refs/heads/main.zip).
+
+## Theme Studio
+
+Open the extension popup and choose a card in **Choose your world**. Available themes: Original YouTube, Stranger Things, Breaking Bad, Game of Thrones, GTA VI, Call of Duty: Modern Warfare 4, Xbox, PS5, and Netflix.
+
+Each theme has its own palette, display typography, background atmosphere, header logo, search styling, button geometry, menus, chips, scrollbars, playback progress, buffering spinner, and page loading line. Logos are bundled locally; selecting themes makes no requests to their source sites. Video frames and thumbnail imagery retain their original colors.
+
+Selections persist locally and update open YouTube tabs immediately. Stranger Things remains the default for existing installations. **Original YouTube** removes the visual theme and restores the native logo and original light/dark appearance, while playback and cleanup preferences remain independent. Special timeline effects and ambilight run only in the Stranger Things theme; switching themes removes active overlays immediately.
+
+After updating extension files, reload the extension and refresh YouTube once. Subsequent theme changes need no refresh. Current desktop Chromium is required for scoped theme CSS.
+
+Theme runtime checks: `npm run test:themes` (requires the optional Playwright/Chromium setup documented for the browser smoke test). These exercise all nine themes in an actual loaded MV3 extension using representative YouTube components, including native restoration, multiple tabs, SPA header replacement, keyboard activation, and persistence.
 
 ## What you get
 
@@ -59,7 +81,7 @@ Settings apply to open YouTube tabs. Quality selection uses YouTube's available 
 
 ## Enter the Upside Down
 
-Open **[Chris Grey — LET THE WORLD BURN (Official Lyric Video)](https://www.youtube.com/watch?v=SkcO47UDzzY&list=RDSkcO47UDzzY&start_radio=1)** with **Cinematic effects** enabled.
+Open **[Chris Grey — LET THE WORLD BURN (Official Lyric Video)](https://www.youtube.com/watch?v=SkcO47UDzzY&list=RDSkcO47UDzzY&start_radio=1)** with the **Stranger Things** theme selected and **Cinematic effects** enabled.
 
 The extension recognizes video ID `SkcO47UDzzY`; playlist and radio parameters do not change that match. It reads the video's current playback time every 500 ms and changes the atmosphere at these boundaries:
 

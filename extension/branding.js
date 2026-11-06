@@ -8,139 +8,6 @@ function injectPremiumStyles() {
   const style = document.createElement("style");
   style.id = "ctf-premium-style";
   style.textContent = `
-    /* ===== RGB WAVE ANIMATION KEYFRAMES ===== */
-    @keyframes ctf-rgb-wave {
-      0% {
-        background-position: 0% 50%;
-        filter: drop-shadow(0 0 8px rgba(255, 0, 128, 0.6));
-      }
-      25% {
-        filter: drop-shadow(0 0 12px rgba(0, 255, 255, 0.7));
-      }
-      50% {
-        background-position: 100% 50%;
-        filter: drop-shadow(0 0 10px rgba(128, 0, 255, 0.6));
-      }
-      75% {
-        filter: drop-shadow(0 0 14px rgba(255, 255, 0, 0.7));
-      }
-      100% {
-        background-position: 0% 50%;
-        filter: drop-shadow(0 0 8px rgba(255, 0, 128, 0.6));
-      }
-    }
-
-    @keyframes ctf-pulse-glow {
-      0%, 100% {
-        text-shadow:
-          0 0 4px rgba(255, 255, 255, 0.8),
-          0 0 8px rgba(0, 255, 255, 0.6),
-          0 0 16px rgba(128, 0, 255, 0.4);
-      }
-      50% {
-        text-shadow:
-          0 0 8px rgba(255, 255, 255, 1),
-          0 0 16px rgba(255, 0, 128, 0.8),
-          0 0 24px rgba(255, 255, 0, 0.5);
-      }
-    }
-
-    @keyframes ctf-x-pulse {
-      0%, 100% {
-        transform: scale(1);
-        filter: drop-shadow(0 0 6px rgba(255, 255, 255, 0.9));
-      }
-      50% {
-        transform: scale(1.08);
-        filter: drop-shadow(0 0 12px rgba(0, 255, 255, 1)) drop-shadow(0 0 20px rgba(255, 0, 128, 0.7));
-      }
-    }
-
-    ytd-topbar-logo-renderer #logo-icon {
-      display: flex !important;
-      align-items: center;
-      width: auto !important;
-      height: auto !important;
-      position: relative;
-    }
-
-    ytd-topbar-logo-renderer #logo-icon-label {
-      display: none !important;
-    }
-
-    ytd-topbar-logo-renderer #logo-icon .ctf-brand-text {
-      font-family: "Google Sans", "Roboto", "Inter", sans-serif;
-      font-weight: 800;
-      font-size: 22px;
-      letter-spacing: 1.5px;
-      text-transform: uppercase;
-      background: linear-gradient(
-        90deg,
-        #ff0080,
-        #ff8c00,
-        #ffff00,
-        #00ff88,
-        #00cfff,
-        #8000ff,
-        #ff0080
-      );
-      background-size: 300% 300%;
-      -webkit-background-clip: text;
-      background-clip: text;
-      color: transparent;
-      animation: ctf-rgb-wave 4s ease-in-out infinite;
-      position: relative;
-      padding: 2px 0;
-    }
-
-    ytd-topbar-logo-renderer #logo-icon .ctf-brand-text::before {
-      content: "";
-      position: absolute;
-      inset: -2px -4px;
-      background: linear-gradient(
-        90deg,
-        rgba(255, 0, 128, 0.15),
-        rgba(0, 255, 255, 0.15),
-        rgba(128, 0, 255, 0.15)
-      );
-      border-radius: 6px;
-      z-index: -1;
-      opacity: 0.5;
-      filter: blur(8px);
-    }
-
-    ytd-topbar-logo-renderer #logo-icon .ctf-brand-text strong {
-      color: #ffffff;
-      -webkit-text-fill-color: #ffffff;
-      font-weight: 900;
-      display: inline-block;
-      animation: ctf-x-pulse 2s ease-in-out infinite, ctf-pulse-glow 2s ease-in-out infinite;
-      margin-left: 2px;
-    }
-
-    /* ===== LOGO HOVER EFFECTS ===== */
-    ytd-topbar-logo-renderer #logo-icon:hover .ctf-brand-text {
-      animation-duration: 1.5s;
-      filter: brightness(1.2);
-      transform: scale(1.05);
-      transition: transform 0.3s ease, filter 0.3s ease;
-    }
-
-    ytd-topbar-logo-renderer #logo-icon:hover .ctf-brand-text strong {
-      animation-duration: 0.8s;
-    }
-
-    ytd-topbar-logo-renderer #logo-icon .ctf-brand-text {
-      transition: transform 0.3s ease, filter 0.3s ease;
-      cursor: pointer;
-    }
-
-    :root {
-      --yt-spec-brand-background-solid: #050505;
-      --yt-spec-brand-background-primary: #050505;
-      --yt-spec-text-primary: #f5f5f5;
-    }
-
     /* ===== SUPER VOLUME SLIDER (500% BOOST) - REFINED UI/UX ===== */
     .ctf-volume-boost-slider {
       position: relative !important;
@@ -170,10 +37,9 @@ function injectPremiumStyles() {
       height: 100%;
       width: 100%;
       background: linear-gradient(90deg,
-        #ffffff 0%,
-        #ffffff 20%,
-        #00cfff 40%,
-        #ff0080 100%
+        var(--ipt-accent, #ffffff) 0%,
+        var(--ipt-accent, #ffffff) 40%,
+        var(--ipt-secondary, #ffffff) 100%
       );
       opacity: 1;
       transform-origin: left center;
@@ -445,31 +311,5 @@ function injectPremiumStyles() {
 
 function applyPremiumBranding() {
   injectPremiumStyles();
-  const logoIcon = document.querySelector(
-    "ytd-topbar-logo-renderer #logo-icon"
-  );
-  if (logoIcon && !logoIcon.dataset.ctfPremium) {
-    const textSpan = document.createElement("span");
-    textSpan.className = "ctf-brand-text";
-    textSpan.innerHTML = "IPTUBE <strong>X</strong>";
-    logoIcon.innerHTML = "";
-    logoIcon.appendChild(textSpan);
-    logoIcon.dataset.ctfPremium = "true";
-  }
-
-  const label = document.querySelector(
-    "ytd-topbar-logo-renderer #logo-icon-label"
-  );
-  if (label) {
-    label.textContent = "IPTUBE X";
-  }
-
-  const masthead = document.querySelector("ytd-masthead");
-  if (masthead && !masthead.dataset.ctfPremium) {
-    masthead.dataset.ctfPremium = "true";
-    masthead.style.background = "#050505";
-    masthead.style.borderBottom = "2px solid";
-    masthead.style.borderImage =
-      "linear-gradient(90deg, #ff0080, #00cfff, #8000ff, #ff0080) 1";
-  }
+  ThemeController.refreshBranding();
 }

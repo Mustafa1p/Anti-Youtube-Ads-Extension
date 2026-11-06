@@ -10,17 +10,19 @@
     "format:check": "prettier --check .",
     "check": "npm run format:check && npm run validate && npm test",
     "package": "npm run validate && node scripts/package.cjs",
-    "assets:generate": "node scripts/generate-theme.cjs && prettier --write \"extension/background/*.svg\" extension/spatial-audio.svg"
+    "assets:generate": "node scripts/generate-theme.cjs && prettier --write \"extension/background/*.svg\" extension/spatial-audio.svg",
+    "test:themes": "node scripts/theme-smoke.cjs",
+    "test:updates": "node scripts/update-smoke.cjs"
   },
   "devDependencies": {
     "prettier": "3.8.2"
   },
-  "version": "2.3.2",
-  "description": "Desktop YouTube enhancements and Stranger Things cinematic effects.",
+  "version": "2.4.0",
+  "description": "Desktop YouTube enhancements with nine movie, gaming, and original visual themes.",
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/Mustafa1p/Anti-Youtube-Ads-Extension-.git"
+    "url": "https://github.com/Mustafa1p/Anti-Youtube-Ads-Extension.git"
   },
   "engines": {
     "node": ">=22"

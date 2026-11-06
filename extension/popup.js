@@ -61,7 +61,7 @@ document.addEventListener("DOMContentLoaded", () => {
     [
       "cinematicEffects",
       "Cinematic effects",
-      "Special video timeline + your ambilight playlist"
+      "Stranger Things timeline + your ambilight playlist"
     ]
   ];
 

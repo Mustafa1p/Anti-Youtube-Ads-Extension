@@ -1,5 +1,13 @@
 # Changelog
 
+## 2.4.0 — 2026-11-06
+
+- Add automatic GitHub release checks every six hours, a toolbar update badge, manual checking, and an update download/install guide. Unpacked installs require replacing files and reloading; no remote code is executed.
+- Add a nine-card theme picker with persistent, immediate switching across open YouTube tabs.
+- Add Breaking Bad, Game of Thrones, GTA VI, Modern Warfare 4, Xbox, PS5, and Netflix palettes, branding, backgrounds, buttons, menus, and loading/progress controls.
+- Add Original YouTube restoration and isolate Stranger Things styles and effects to its selected theme.
+- Bundle the supplied logo assets, record their sources, and add theme storage and Chromium runtime regression checks.
+
 ## 2.3.2 — 2026-11-04
 
 - Fail the browser smoke test when its service worker logs console errors, before reporting success.

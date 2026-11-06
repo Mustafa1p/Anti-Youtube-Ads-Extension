@@ -9,7 +9,7 @@ Follow [CONTRIBUTING.md](../CONTRIBUTING.md). Commit the source, documentation, 
 ## Before publishing a release
 
 1. Choose the version and update **both** `package.json` and `extension/manifest.json`. Run `npm install --package-lock-only --ignore-scripts` to synchronize lockfile metadata.
-2. Update visible version labels in `popup.html` and `backgroundRandomizer.js`, and move the changelog's Unreleased entry to the release version and date.
+2. Update visible version labels in `popup.html` (the running popup also reads its manifest version), and move the changelog's Unreleased entry to the release version and date.
 3. Run `npm ci`, `npm run check`, and `npm run package` from a fresh checkout.
 4. Extract `dist/iptube-browser-extension.zip`, load its `extension` folder in a separate Chromium profile, and perform the [manual checks](../CONTRIBUTING.md#validate-behavior). Record the browser version and results in the release notes.
 5. Check the [asset inventory](assets.md), settings defaults, permissions, README, and versioned changes.
@@ -24,3 +24,11 @@ After the reviewed code is merged, a maintainer can create a GitHub Release with
 The README currently links its download badge to the source ZIP of `main`. Once releases exist, maintainers may point it to the release asset. Keep a working source-download option and clear unpacked-install instructions. A README cannot install an extension automatically.
 
 GitHub publication and browser-store publication are separate. This repository supplies an unpacked Chromium extension; no store listing or signed browser package is claimed.
+
+## GitHub updater contract
+
+The updater checks `https://api.github.com/repos/Mustafa1p/Anti-Youtube-Ads-Extension/releases/latest`. Publish a stable, non-draft release tagged `v<manifest version>` and attach the exact file name `iptube-browser-extension.zip`. Upload the ZIP and `SHA256SUMS.txt` while the release is a draft, verify the downloaded bytes against the tested artifact, then publish the draft. This prevents clients seeing an incomplete release. A release without its ZIP is not offered by the updater.
+
+The package version, manifest version, Git tag, popup fallback label, and changelog must agree. The client uses numeric Chromium version comparison, ignores prereleases, validates all release/download links against this exact repository, and never fetches executable code. A successful check is cached for six hours; failed automatic checks are also throttled. The manual check bypasses that interval. Alarm registration and cached badge state are restored whenever the service worker starts.
+
+GitHub release checks do not provide silent installation for unpacked extensions. Keep the manual replacement and browser-reload instructions in the popup and README. Version 2.4.0 is the first version with the checker, so older clients require a one-time manual update.

@@ -30,6 +30,20 @@ Audio mode changes presentation only. Thumbnails are upgraded only for ordinary 
 
 The special video remains `SkcO47UDzzY`. It has priority over user-configured ambilight videos. Phase boundaries are 45, 46, 67, 106, 107, 138, and 149 seconds. The effect follows `currentTime`, including seeking, and the mode returns to normal after navigation. The new preference allows both timeline and ambilight effects to be disabled from the popup.
 
+### Theme Studio
+
+`themeSettings.js` defines the allowlisted nine-theme catalog and shared palette roles. `iptubeTheme` is stored in `chrome.storage.local`; missing, deleted, or invalid values use Stranger Things for compatibility. Initial reads carry a revision guard so a newer storage event wins over a stale response. The popup serializes writes and reports save failures without committing an unsaved selection.
+
+`themeController.js` sets the root theme attribute and palette variables, retains the native logo DOM, and observes header replacement with one queued animation-frame refresh. Themes temporarily opt into YouTube's native dark component variants; Original restores the starting `dark` attribute and removes all owned palette tokens and branding. No YouTube appearance preference or cookie is changed. `style.css` is scoped exclusively to Stranger Things; `themes.css` scopes all shared rules away from Original and supports both Polymer and generated component names. Special timeline/ambilight state is cleared synchronously on theme changes and runs only in Stranger Things.
+
+The reference direction comes from the supplied brand logos and the existing Stranger Things interface. The grid uses actual local logos and selected-state checks; YouTube content retains native imagery and familiar layout. Breaking Bad uses chemical green, a faint periodic grid, monospace display type, and square controls. Game of Thrones uses ice/steel, gold accents, serif titles, and sharp edges. GTA VI uses pink/aqua atmosphere and rounded controls. Modern Warfare uses charcoal/khaki, yellow accents, diagonal texture, and narrow display type. Xbox uses green radial light; PS5 uses blue/white curves; Netflix uses red/black and compact rectangular controls. Text remains in high-contrast palette roles; display fonts are limited to headings and branding.
+
+### GitHub release checks
+
+`updateService.js` reads only the public latest-stable-release endpoint for the fixed repository. It validates the numeric version, exact release URL, and exact uploaded ZIP asset URL before persisting metadata. Concurrent requests share one promise; automatic attempts are cached for six hours, including failures. Manual checks bypass the interval. Cached metadata is revalidated before display, and availability is recomputed against the running manifest so an installed update clears the badge.
+
+A persistent six-hour `chrome.alarms` schedule is recreated when missing on service-worker startup. The popup checks on open, shows a download action only for a newer packaged release, and explains manual unpacked installation. Update messages are accepted only from extension pages; YouTube content scripts cannot trigger forced checks. The new `alarms` permission schedules checks; the `api.github.com` host permission permits public metadata reads. No GitHub token, cookies, video information, remote code execution, filesystem access, or silent replacement is involved.
+
 ## Validation boundaries
 
 Node tests use mocked browser APIs for deterministic concurrency and playback cases. Browser checks use an actual unpacked Chromium extension, its service worker, popup, and the linked desktop YouTube video. Successful quality requests and rendered timeline phases do not establish that every account, browser release, video, or ad format will work.

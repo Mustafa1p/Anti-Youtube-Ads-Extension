@@ -1,7 +1,8 @@
 importScripts(
   "featureSettings.js",
   "sponsorBlockService.js",
-  "adBlockingService.js"
+  "adBlockingService.js",
+  "updateService.js"
 );
 
 const STORAGE_KEY = "blockedRequestCount";
@@ -57,6 +58,24 @@ if (chrome.declarativeNetRequest?.onRuleMatchedDebug) {
 }
 
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+  if (
+    message?.type === "CHECK_EXTENSION_UPDATE" ||
+    message?.type === "GET_EXTENSION_UPDATE"
+  ) {
+    if (
+      sender.id !== chrome.runtime.id ||
+      !sender.url?.startsWith(chrome.runtime.getURL(""))
+    )
+      return false;
+    const operation =
+      message.type === "CHECK_EXTENSION_UPDATE"
+        ? UpdateService.check(message.force === true)
+        : UpdateService.status();
+    operation
+      .then((state) => sendResponse({ ok: true, state }))
+      .catch(() => sendResponse({ ok: false }));
+    return true;
+  }
   if (message?.type === "SET_AD_BLOCKING") {
     const extensionPage =
       sender.id === chrome.runtime.id &&
@@ -108,3 +127,11 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 
   return false;
 });
+
+if (chrome.alarms) {
+  chrome.alarms.onAlarm.addListener((alarm) => {
+    if (alarm.name === UpdateService.ALARM_NAME)
+      return UpdateService.check().catch(() => {});
+  });
+  UpdateService.start().catch(() => {});
+}
