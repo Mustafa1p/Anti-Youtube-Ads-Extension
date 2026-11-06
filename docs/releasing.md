@@ -21,7 +21,7 @@ The CI workflow tests supported Node versions on Linux and Windows. The Linux/No
 
 After the reviewed code is merged, a maintainer can create a GitHub Release with tag `v<version>`, add the tested ZIP as an asset, and use the changelog plus manual test results as release notes. This project does not automatically push tags or publish releases.
 
-The README currently links its download badge to the source ZIP of `main`. Once releases exist, maintainers may point it to the release asset. Keep a working source-download option and clear unpacked-install instructions. A README cannot install an extension automatically.
+The README download badge points to the latest stable release asset, `releases/latest/download/iptube-browser-extension.zip`. Keep this asset name stable, retain the source-archive fallback, and keep unpacked-install instructions current. Update the theme-grid, GitHub-update, and full-popup screenshots when the interface changes. A README cannot install an extension automatically.
 
 GitHub publication and browser-store publication are separate. This repository supplies an unpacked Chromium extension; no store listing or signed browser package is claimed.
 
